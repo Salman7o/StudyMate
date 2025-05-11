@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
-import { useAuth } from "@/contexts/auth-context"; // Updated import path
+// Import auth from the correct path
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   Avatar,
   AvatarFallback,
@@ -190,26 +191,47 @@ export default function TutorProfile() {
       endTime.setMinutes(endTime.getMinutes() + data.duration);
 
       const sessionData = {
+        studentId: user?.id, // Add student ID
         tutorId,
         subject: data.subject,
-        date: startTime.toISOString().split('T')[0],
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-        amount: Math.round(tutor.tutorProfile.hourlyRate * (data.duration / 60)),
-        notes: data.notes || "",
+        sessionType: 'online', // Add session type
+        date: startTime,
+        startTime: startTime.toISOString().split('T')[1].substring(0, 5), // Format as HH:MM
+        duration: data.duration,
+        totalAmount: Math.round(tutor.tutorProfile.hourlyRate * (data.duration / 60)),
+        status: 'confirmed', // Set status to confirmed for demo
+        description: data.notes || "",
       };
 
       const res = await apiRequest("POST", "/api/sessions", sessionData);
       return await res.json();
     },
-    onSuccess: () => {
-      setShowBookingModal(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
-      // Update URL to remove the action=book query parameter
-      const newUrl = location.split('?')[0];
-      window.history.replaceState({}, '', newUrl);
+    onSuccess: (data) => {
+      // Show success toast
+      toast({
+        title: "Payment Successful",
+        description: "Your booking has been confirmed successfully!",
+        variant: "default",
+      });
+      
+      // Close modal after a short delay to allow user to see the success message
+      setTimeout(() => {
+        setShowBookingModal(false);
+        // Redirect to my-sessions page
+        setLocation("/my-sessions");
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      }, 2000);
     },
+    onError: (error) => {
+      console.error('Booking error:', error);
+      toast({
+        title: "Booking Error",
+        description: "There was a problem with your booking. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
   const onSubmit = (data: BookingFormValues) => {
