@@ -195,12 +195,12 @@ export default function BookSession() {
       studentId: user.id,
       tutorId: tutor.id,
       subject: subject,
-      date: sessionDate.toISOString(),
+      sessionType: "online", // Added required field
+      date: sessionDate, 
+      startTime: time, // Added required field
       duration: parseInt(duration),
-      notes: notes,
-      price: price,
-      paymentMethod: paymentMethod,
-      paymentStatus: "completed", // Mock payment status as completed
+      totalAmount: price, // Renamed to match schema
+      description: notes, // Renamed to match schema
       status: "confirmed", // Auto-confirm for demo purposes
     };
     

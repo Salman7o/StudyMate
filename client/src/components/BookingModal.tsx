@@ -95,7 +95,7 @@ export default function BookingModal({ open, onOpenChange, tutor, summary }: Boo
               <div>
                 <p className="font-medium">Payment</p>
                 <p className="text-sm text-muted-foreground">
-                  ₹{summary.price} • {summary.paymentMethod} • {summary.paymentStatus}
+                  ₹{summary.totalAmount} • Payment Successful
                 </p>
               </div>
             </div>
