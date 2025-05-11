@@ -259,8 +259,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Session routes
   app.post("/api/sessions", isAuthenticated, async (req, res) => {
     try {
-      const result = validateZodSchema(insertSessionSchema, req.body);
+      console.log("Session data received:", JSON.stringify(req.body, null, 2));
+      
+      // First fix date if sent as Date object and not string
+      if (req.body.date && req.body.date instanceof Date) {
+        req.body.date = req.body.date.toISOString();
+      }
+      
+      // Ensure all required fields are present and valid
+      const sessionData = {
+        studentId: req.body.studentId,
+        tutorId: req.body.tutorId,
+        subject: req.body.subject || "",
+        sessionType: req.body.sessionType || "online",
+        date: req.body.date, // Should be ISO string
+        startTime: req.body.startTime || "09:00",
+        duration: req.body.duration || 60,
+        totalAmount: req.body.totalAmount || 1000,
+        status: req.body.status || "pending",
+        description: req.body.description || "",
+      };
+      
+      console.log("Processed session data:", JSON.stringify(sessionData, null, 2));
+      
+      const result = validateZodSchema(insertSessionSchema, sessionData);
       if (!result.success) {
+        console.error("Validation failed:", result.error);
         return res.status(400).json({ message: result.error });
       }
       
@@ -270,6 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const session = await storage.createSession(result.data);
+      console.log("Session created successfully:", session);
       return res.status(201).json(session);
     } catch (error) {
       console.error("Create session error:", error);

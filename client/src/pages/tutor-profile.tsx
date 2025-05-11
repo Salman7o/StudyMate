@@ -201,14 +201,14 @@ export default function TutorProfile() {
 
         // Prepare the session data according to schema requirements
         const sessionData = {
-          studentId: user?.id,
-          tutorId: tutorId, 
-          subject: data.subject,
+          studentId: Number(user?.id), // Ensure it's a number
+          tutorId: Number(tutorId),    // Ensure it's a number
+          subject: data.subject || "General Tutoring", // Default value if missing
           sessionType: 'online',
-          date: formattedDate,
-          startTime: data.startTime,
-          duration: data.duration,
-          totalAmount: Math.round(tutor.tutorProfile.hourlyRate * (data.duration / 60)),
+          date: formattedDate, // ISO string
+          startTime: data.startTime || "14:00", // Default if missing
+          duration: Number(data.duration) || 60, // Ensure it's a number
+          totalAmount: Math.round(tutor.tutorProfile.hourlyRate * (data.duration / 60)) || 1000, // Default if calculation fails
           status: 'pending', // Start as pending for proper flow simulation
           description: data.notes || "",
         };

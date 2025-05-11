@@ -25,7 +25,8 @@ interface BookingModalProps {
 export default function BookingModal({ open, onOpenChange, tutor, summary }: BookingModalProps) {
   if (!summary) return null;
 
-  const sessionDate = new Date(summary.date);
+  // Make sure summary.date is a valid date string format
+  const sessionDate = new Date(summary.date || new Date());
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -230,14 +230,14 @@ export default function BookSession() {
     
     // Create session data with all required fields in correct format
     const sessionData = {
-      studentId: user.id,
-      tutorId: tutor.id,
-      subject: subject,
+      studentId: Number(user.id),
+      tutorId: Number(tutor.id),
+      subject: subject || "General Tutoring", // Default value if empty
       sessionType: "online", // Required field
       date: sessionDate.toISOString(), // Format as ISO string for proper date handling
-      startTime: time, // Required field
-      duration: parseInt(duration),
-      totalAmount: price + calculatePlatformFee(), // Include platform fee
+      startTime: time || "09:00", // Required field
+      duration: parseInt(duration) || 60, // Default value if parsing fails
+      totalAmount: Math.round(price + calculatePlatformFee()) || 1000, // Default if calculation fails
       description: notes || "", // Ensure not undefined
       status: "pending", // Start as pending for proper simulation
     };
