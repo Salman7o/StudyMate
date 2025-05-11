@@ -181,31 +181,38 @@ export default function TutorProfile() {
 
   const bookSessionMutation = useMutation({
     mutationFn: async (data: BookingFormValues) => {
-      const startTime = new Date(data.date);
-      const [hours, minutes] = data.startTime.split(':').map(Number);
-      startTime.setHours(hours, minutes, 0, 0);
+      try {
+        const startTime = new Date(data.date);
+        const [hours, minutes] = data.startTime.split(':').map(Number);
+        startTime.setHours(hours, minutes, 0, 0);
 
-      const endTime = new Date(startTime);
-      endTime.setMinutes(endTime.getMinutes() + data.duration);
+        const endTime = new Date(startTime);
+        endTime.setMinutes(endTime.getMinutes() + data.duration);
 
-      // Prepare the session data according to schema requirements
-      const sessionData = {
-        studentId: user?.id,
-        tutorId,
-        subject: data.subject,
-        sessionType: 'online',
-        date: startTime,
-        startTime: startTime.toISOString().split('T')[1].substring(0, 5), // Format as HH:MM
-        duration: data.duration,
-        totalAmount: Math.round(tutor.tutorProfile.hourlyRate * (data.duration / 60)),
-        status: 'confirmed', // Pre-confirm for demo purposes
-        description: data.notes || "",
-      };
+        // Prepare the session data according to schema requirements
+        const sessionData = {
+          studentId: user?.id,
+          tutorId,
+          subject: data.subject,
+          sessionType: 'online',
+          date: startTime,
+          startTime: data.startTime,
+          duration: data.duration,
+          totalAmount: Math.round(tutor.tutorProfile.hourlyRate * (data.duration / 60)),
+          status: 'confirmed', // Pre-confirm for demo purposes
+          description: data.notes || "",
+        };
 
-      const res = await apiRequest("POST", "/api/sessions", sessionData);
-      return await res.json();
+        console.log("Sending session data:", sessionData);
+        const res = await apiRequest("POST", "/api/sessions", sessionData);
+        return await res.json();
+      } catch (error) {
+        console.error("Error in session API request:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
+      console.log("Session created successfully:", data);
       // Show success toast
       toast({
         title: "Payment Successful",

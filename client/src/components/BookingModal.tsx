@@ -18,7 +18,7 @@ import { Link } from "wouter";
 interface BookingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  tutor: TutorWithProfile;
+  tutor: any;
   summary: any;
 }
 

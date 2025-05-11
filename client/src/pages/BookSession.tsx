@@ -159,15 +159,31 @@ export default function BookSession() {
   // Book session mutation
   const bookSessionMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/sessions", data);
-      return response.json();
+      try {
+        console.log("Sending session data:", data);
+        const response = await apiRequest("POST", "/api/sessions", data);
+        return response.json();
+      } catch (error) {
+        console.error("Error in API request:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/sessions`] });
+      console.log("Session created successfully:", data);
+      // Show success toast
+      toast({
+        title: "Payment Successful!",
+        description: "Your booking has been confirmed.",
+        variant: "default",
+      });
+      
+      // Update session data for the modal
+      queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
       setSummary(data);
       setIsModalOpen(true);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Session booking error:", error);
       toast({
         title: "Booking failed",
         description: "Failed to book the session. Please try again.",
