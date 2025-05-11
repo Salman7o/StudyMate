@@ -4,8 +4,8 @@ import { useParams, useLocation, Redirect } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
-import { useAuth } from "../App";
-import { TutorWithProfile } from "@shared/schema";
+import { useAuth } from "@/hooks/use-auth";
+import { TutorProfile } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -77,7 +77,7 @@ export default function BookSession() {
   const tutorId = parseInt(id);
 
   // Fetch tutor data
-  const { data: tutor, isLoading } = useQuery<TutorWithProfile>({
+  const { data: tutor, isLoading } = useQuery<any>({
     queryKey: [`/api/tutors/${tutorId}`],
     enabled: !!tutorId,
   });

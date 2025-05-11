@@ -60,6 +60,7 @@ import { format, addDays, addHours, isBefore, isAfter, parseISO } from "date-fns
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Star,
   StarHalf,
@@ -96,15 +97,13 @@ const bookingFormSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingFormSchema>;
 
-import { useAuth } from "@/hooks/use-auth";
-
 export default function TutorProfile() {
-  const { user } = useAuth();
   const params = useParams();
   const [location, setLocation] = useLocation();
   const [showChatModal, setShowChatModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
   const tutorId = params.id ? parseInt(params.id) : 0;
 
   // Check if the URL has a query parameter to open the booking dialog
@@ -189,16 +188,17 @@ export default function TutorProfile() {
       const endTime = new Date(startTime);
       endTime.setMinutes(endTime.getMinutes() + data.duration);
 
+      // Prepare the session data according to schema requirements
       const sessionData = {
-        studentId: user?.id, // Add student ID
+        studentId: user?.id,
         tutorId,
         subject: data.subject,
-        sessionType: 'online', // Add session type
+        sessionType: 'online',
         date: startTime,
         startTime: startTime.toISOString().split('T')[1].substring(0, 5), // Format as HH:MM
         duration: data.duration,
         totalAmount: Math.round(tutor.tutorProfile.hourlyRate * (data.duration / 60)),
-        status: 'confirmed', // Set status to confirmed for demo
+        status: 'confirmed', // Pre-confirm for demo purposes
         description: data.notes || "",
       };
 

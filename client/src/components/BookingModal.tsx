@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { TutorWithProfile } from "@shared/schema";
+import { TutorProfile } from "@shared/schema";
 import { CheckCircle2, Calendar, Clock, BookOpen, User } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
