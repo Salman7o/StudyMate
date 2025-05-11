@@ -182,6 +182,13 @@ export default function TutorProfile() {
   const bookSessionMutation = useMutation({
     mutationFn: async (data: BookingFormValues) => {
       try {
+        // Show payment processing simulation
+        toast({
+          title: "Processing Payment...",
+          description: "Please wait while we process your payment.",
+        });
+
+        // Prepare date properly
         const startTime = new Date(data.date);
         const [hours, minutes] = data.startTime.split(':').map(Number);
         startTime.setHours(hours, minutes, 0, 0);
@@ -195,19 +202,30 @@ export default function TutorProfile() {
         // Prepare the session data according to schema requirements
         const sessionData = {
           studentId: user?.id,
-          tutorId: tutorId,
+          tutorId: tutorId, 
           subject: data.subject,
           sessionType: 'online',
           date: formattedDate,
           startTime: data.startTime,
           duration: data.duration,
           totalAmount: Math.round(tutor.tutorProfile.hourlyRate * (data.duration / 60)),
-          status: 'pending', // For proper flow simulation
+          status: 'pending', // Start as pending for proper flow simulation
           description: data.notes || "",
         };
 
         console.log("Sending session data:", sessionData);
-        // Simulate payment process
+        
+        // Simulate payment processing delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Show payment success
+        toast({
+          title: "Payment Successful!",
+          description: "Your payment has been processed successfully.",
+          variant: "default",
+        });
+        
+        // Simulate a short delay before API call
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Now send API request
@@ -220,12 +238,15 @@ export default function TutorProfile() {
     },
     onSuccess: (data) => {
       console.log("Session created successfully:", data);
-      // Show success toast
-      toast({
-        title: "Payment Successful",
-        description: "Your booking has been confirmed successfully!",
-        variant: "default",
-      });
+      
+      // Show booking confirmation message with delay
+      setTimeout(() => {
+        toast({
+          title: "Booking Confirmed!",
+          description: "Your session has been booked successfully.",
+          variant: "default",
+        });
+      }, 1000);
       
       // Close modal after a short delay to allow user to see the success message
       setTimeout(() => {
@@ -235,7 +256,7 @@ export default function TutorProfile() {
         // Invalidate queries to refresh data
         queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
         queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
-      }, 2000);
+      }, 2500);
     },
     onError: (error) => {
       console.error('Booking error:', error);

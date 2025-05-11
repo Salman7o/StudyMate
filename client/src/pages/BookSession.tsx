@@ -159,6 +159,25 @@ export default function BookSession() {
   // Book session mutation
   const bookSessionMutation = useMutation({
     mutationFn: async (data: any) => {
+      // Show payment processing simulation
+      toast({
+        title: "Processing Payment...",
+        description: "Please wait while we process your payment.",
+      });
+      
+      // Simulate payment processing delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Show payment success
+      toast({
+        title: "Payment Successful!",
+        description: "Your payment has been processed successfully.",
+        variant: "default",
+      });
+      
+      // Simulate a short delay before API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       try {
         console.log("Sending session data:", data);
         const response = await apiRequest("POST", "/api/sessions", data);
@@ -170,14 +189,17 @@ export default function BookSession() {
     },
     onSuccess: (data) => {
       console.log("Session created successfully:", data);
-      // Show success toast
-      toast({
-        title: "Payment Successful!",
-        description: "Your booking has been confirmed.",
-        variant: "default",
-      });
       
-      // Update session data for the modal
+      // Show booking confirmation message with delay
+      setTimeout(() => {
+        toast({
+          title: "Booking Confirmed!",
+          description: "Your session has been booked successfully.",
+          variant: "default",
+        });
+      }, 1000);
+      
+      // Update session data for the modal and update UI
       queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
       setSummary(data);
       setIsModalOpen(true);
@@ -206,20 +228,21 @@ export default function BookSession() {
     // Calculate price
     const price = calculatePrice();
     
-    // Create session data
+    // Create session data with all required fields in correct format
     const sessionData = {
       studentId: user.id,
       tutorId: tutor.id,
       subject: subject,
-      sessionType: "online", // Added required field
-      date: sessionDate, 
-      startTime: time, // Added required field
+      sessionType: "online", // Required field
+      date: sessionDate.toISOString(), // Format as ISO string for proper date handling
+      startTime: time, // Required field
       duration: parseInt(duration),
-      totalAmount: price, // Renamed to match schema
-      description: notes, // Renamed to match schema
-      status: "confirmed", // Auto-confirm for demo purposes
+      totalAmount: price + calculatePlatformFee(), // Include platform fee
+      description: notes || "", // Ensure not undefined
+      status: "pending", // Start as pending for proper simulation
     };
     
+    console.log("Submitting session data:", sessionData);
     bookSessionMutation.mutate(sessionData);
   };
 

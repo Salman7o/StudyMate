@@ -119,19 +119,19 @@ export function StudentBookingModal({ isOpen, onClose, student }: StudentBooking
       // Simulate processing delay
       await new Promise(resolve => setTimeout(resolve, 1500));
 
+      // Format session data to exactly match the schema requirements
       const sessionData = {
         studentId: student.id,
         tutorId: user.id,
         subject: subject,
         sessionType: sessionType,
-        date: date.toISOString(),
+        date: date.toISOString(), // ISO string for proper date handling
         startTime: startTime,
         duration: parseInt(duration),
         totalAmount: totalAmount,
-        description: description,
-        status: "upcoming", // Auto-confirm for prototype
-        paymentMethod: paymentMethod,
-        paymentStatus: "paid"
+        description: description || "",
+        status: "pending", // Start as pending for proper workflow simulation
+        // Note: paymentMethod and paymentStatus are not in schema, so we remove them
       };
 
       await apiRequest("POST", "/api/sessions", sessionData);
