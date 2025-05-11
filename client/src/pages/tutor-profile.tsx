@@ -189,21 +189,28 @@ export default function TutorProfile() {
         const endTime = new Date(startTime);
         endTime.setMinutes(endTime.getMinutes() + data.duration);
 
+        // Format date as ISO string for consistent handling
+        const formattedDate = startTime.toISOString();
+
         // Prepare the session data according to schema requirements
         const sessionData = {
           studentId: user?.id,
-          tutorId,
+          tutorId: tutorId,
           subject: data.subject,
           sessionType: 'online',
-          date: startTime,
+          date: formattedDate,
           startTime: data.startTime,
           duration: data.duration,
           totalAmount: Math.round(tutor.tutorProfile.hourlyRate * (data.duration / 60)),
-          status: 'confirmed', // Pre-confirm for demo purposes
+          status: 'pending', // For proper flow simulation
           description: data.notes || "",
         };
 
         console.log("Sending session data:", sessionData);
+        // Simulate payment process
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Now send API request
         const res = await apiRequest("POST", "/api/sessions", sessionData);
         return await res.json();
       } catch (error) {
