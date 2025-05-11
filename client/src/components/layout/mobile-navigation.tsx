@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "../../context/AuthContext";
 
 export function MobileNavigation() {
   const [location] = useLocation();
@@ -10,9 +10,9 @@ export function MobileNavigation() {
     return null;
   }
 
-  // Show correct finder link based on user role
-  const isTutor = user && user.role === "tutor";
-  const isStudent = user && user.role === "student";
+  // Show correct finder link based on user type
+  const isTutor = user && user.userType === "tutor";
+  const isStudent = user && user.userType === "student";
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-700 py-2 px-4 z-10">
