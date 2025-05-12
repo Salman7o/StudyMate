@@ -405,16 +405,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You are not authorized to update this session" });
       }
       
-      // Additional authorization checks based on status
-      if (status === 'confirmed' && userId !== session.tutorId) {
-        return res.status(403).json({ message: "Only tutors can confirm sessions" });
+      // Handle different status updates
+      let finalStatus = status;
+      
+      // Enforce status transition rules
+      if (status === 'confirmed') {
+        // Check if user is authorized to confirm
+        if (!session.createdBy) {
+          return res.status(400).json({ message: "Session has no creator information" });
+        }
+        
+        // For student-initiated bookings, only tutor can confirm
+        if (session.createdBy === session.studentId && userId !== session.tutorId) {
+          return res.status(403).json({ message: "Only tutors can confirm student-initiated sessions" });
+        }
+        
+        // For tutor-initiated bookings, only student can confirm
+        if (session.createdBy === session.tutorId && userId !== session.studentId) {
+          return res.status(403).json({ message: "Only students can confirm tutor-initiated sessions" });
+        }
+      }
+      else if (status === 'declined') {
+        // Only allow declining by the non-creator
+        if (userId === session.createdBy) {
+          return res.status(403).json({ message: "You cannot decline your own booking request" });
+        }
+      }
+      else if (status === 'cancelled') {
+        // Only allow cancellation by the creator
+        if (userId !== session.createdBy) {
+          return res.status(403).json({ message: "Only the booking creator can cancel this session" });
+        }
       }
       
-      if (status === 'completed' && userId !== session.tutorId) {
-        return res.status(403).json({ message: "Only tutors can mark sessions as completed" });
-      }
-      
-      const updatedSession = await storage.updateSessionStatus(sessionId, status);
+      const updatedSession = await storage.updateSessionStatus(sessionId, finalStatus);
       
       if (!updatedSession) {
         return res.status(404).json({ message: "Session not found" });
