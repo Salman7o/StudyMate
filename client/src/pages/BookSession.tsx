@@ -99,7 +99,7 @@ export default function BookSession() {
 
     const selectedDate = form.getValues("date");
     const weekday = format(selectedDate, "EEEE");
-    
+
     // Check if tutor is available on selected day
     if (!tutor.profile.availableDays.includes(weekday)) {
       return [];
@@ -108,40 +108,40 @@ export default function BookSession() {
     // Parse tutor's available hours
     const startTime = tutor.profile.availableTimeStart;
     const endTime = tutor.profile.availableTimeEnd;
-    
+
     if (!startTime || !endTime) return [];
 
     const [startHour, startMinute] = startTime.split(":").map(Number);
     const [endHour, endMinute] = endTime.split(":").map(Number);
-    
+
     // Generate time slots in 30-minute increments
     const slots = [];
     const start = new Date();
     start.setHours(startHour, startMinute, 0, 0);
-    
+
     const end = new Date();
     end.setHours(endHour, endMinute, 0, 0);
-    
+
     // Subtract session duration from end time
     const duration = parseInt(form.getValues("duration") || "60");
     const adjustedEnd = new Date(end);
     adjustedEnd.setMinutes(adjustedEnd.getMinutes() - duration);
-    
+
     while (start <= adjustedEnd) {
       slots.push(format(start, "HH:mm"));
       start.setMinutes(start.getMinutes() + 30);
     }
-    
+
     return slots;
   };
 
   // Calculate session price
   const calculatePrice = () => {
     if (!tutor) return 0;
-    
+
     const duration = parseInt(form.getValues("duration") || "60");
     const hourlyRate = tutor.profile.hourlyRate;
-    
+
     return (hourlyRate * duration) / 60;
   };
 
@@ -164,20 +164,20 @@ export default function BookSession() {
         title: "Processing Payment...",
         description: "Please wait while we process your payment.",
       });
-      
+
       // Simulate payment processing delay
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       // Show payment success
       toast({
         title: "Payment Successful!",
         description: "Your payment has been processed successfully.",
         variant: "default",
       });
-      
+
       // Simulate a short delay before API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       try {
         console.log("Sending session data:", data);
         const response = await apiRequest("POST", "/api/sessions", data);
@@ -189,7 +189,7 @@ export default function BookSession() {
     },
     onSuccess: (data) => {
       console.log("Session created successfully:", data);
-      
+
       // Show booking confirmation message with delay
       setTimeout(() => {
         toast({
@@ -198,7 +198,7 @@ export default function BookSession() {
           variant: "default",
         });
       }, 1000);
-      
+
       // Update session data for the modal and update UI
       queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
       setSummary(data);
@@ -217,31 +217,27 @@ export default function BookSession() {
   // Handle form submission
   const onSubmit = (values: BookingFormValues) => {
     if (!user || !tutor) return;
-    
+
     const { date, time, duration, subject, notes, paymentMethod } = values;
-    
+
     // Combine date and time
-    const [hours, minutes] = time.split(":").map(Number);
     const sessionDate = new Date(date);
+    const [hours, minutes] = time.split(":").map(Number);
     sessionDate.setHours(hours, minutes, 0, 0);
-    
-    // Calculate price
-    const price = calculatePrice();
-    
-    // Create session data with all required fields in correct format
+
     const sessionData = {
       studentId: Number(user.id),
       tutorId: Number(tutor.id),
-      subject: subject || "General Tutoring", // Default value if empty
-      sessionType: "online", // Required field
-      date: sessionDate.toISOString(), // Format as ISO string for proper date handling
-      startTime: time || "09:00", // Required field
-      duration: parseInt(duration) || 60, // Default value if parsing fails
-      totalAmount: Math.round(price + calculatePlatformFee()) || 1000, // Default if calculation fails
-      description: notes || "", // Ensure not undefined
-      status: "pending", // Start as pending for proper simulation
+      subject: subject || "General Tutoring",
+      sessionType: "online",
+      date: sessionDate,
+      startTime: time,
+      duration: parseInt(duration),
+      totalAmount: calculateTotal(),
+      description: notes || "",
+      status: "pending"
     };
-    
+
     console.log("Submitting session data:", sessionData);
     bookSessionMutation.mutate(sessionData);
   };
