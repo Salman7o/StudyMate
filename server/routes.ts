@@ -296,7 +296,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You can only book sessions as yourself" });
       }
       
-      const session = await storage.createSession(result.data);
+      const sessionData = {
+        ...result.data,
+        createdBy: req.user.id // Track who created the session
+      };
+      const session = await storage.createSession(sessionData);
       console.log("Session created successfully:", session);
       return res.status(201).json(session);
     } catch (error) {
@@ -408,15 +412,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You are not authorized to update this session" });
       }
       
-      // Additional authorization checks based on status
-      // Allow tutors to immediately confirm sessions
-      if (status === 'confirmed' && userId !== session.tutorId) {
-        return res.status(403).json({ message: "Only tutors can confirm sessions" });
+      // Check authorization based on who initiated the booking
+      if (status === 'confirmed') {
+        // For student-initiated bookings, only tutor can confirm
+        if (session.studentId === session.createdBy && userId !== session.tutorId) {
+          return res.status(403).json({ message: "Only tutors can confirm student-initiated sessions" });
+        }
+        // For tutor-initiated bookings, only student can confirm
+        if (session.tutorId === session.createdBy && userId !== session.studentId) {
+          return res.status(403).json({ message: "Only students can confirm tutor-initiated sessions" });
+        }
+        // Move to upcoming when confirmed
+        status = 'upcoming';
       }
 
-      // Auto-mark as upcoming when tutor confirms
-      if (status === 'confirmed') {
-        status = 'upcoming';
+      // Allow cancellation only by the booking creator
+      if (status === 'cancelled' && userId !== session.createdBy) {
+        return res.status(403).json({ message: "Only the booking creator can cancel this session" });
+      }
+
+      // Allow declining by the non-creator
+      if (status === 'declined') {
+        if (session.createdBy === session.studentId && userId !== session.tutorId) {
+          return res.status(403).json({ message: "Only tutors can decline student-initiated sessions" });
+        }
+        if (session.createdBy === session.tutorId && userId !== session.studentId) {
+          return res.status(403).json({ message: "Only students can decline tutor-initiated sessions" });
+        }
       }
       
       if (status === 'completed' && userId !== session.tutorId) {
