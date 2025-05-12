@@ -272,11 +272,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tutorId: req.body.tutorId,
         subject: req.body.subject || "",
         sessionType: req.body.sessionType || "online",
-        date: req.body.date, // Should be ISO string
+        date: new Date(req.body.date), // Convert to Date object
         startTime: req.body.startTime || "09:00",
         duration: req.body.duration || 60,
         totalAmount: req.body.totalAmount || 1000,
-        status: req.body.status || "pending",
+        status: "pending", // Always start as pending
         description: req.body.description || "",
       };
       

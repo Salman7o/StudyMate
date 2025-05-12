@@ -175,8 +175,9 @@ export default function BookSession() {
       await apiRequest("POST", "/api/sessions", sessionData);
 
       toast({
-        title: "Session booked successfully",
-        description: "The student will be notified of your booking request",
+        title: "Payment Successful",
+        description: "Your session has been successfully booked.",
+        variant: "default",
       });
 
       // Invalidate sessions cache
