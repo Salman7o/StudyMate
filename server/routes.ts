@@ -296,10 +296,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You can only book sessions as yourself" });
       }
       
-      const session = await storage.createSession({
+      const sessionData = {
         ...result.data,
         createdBy: req.user.id // Track who created the session
-      });
+      };
+      const session = await storage.createSession(sessionData);
       console.log("Session created successfully:", session);
       return res.status(201).json(session);
     } catch (error) {
