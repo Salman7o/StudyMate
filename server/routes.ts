@@ -406,8 +406,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Additional authorization checks based on status
+      // Allow tutors to immediately confirm sessions
       if (status === 'confirmed' && userId !== session.tutorId) {
         return res.status(403).json({ message: "Only tutors can confirm sessions" });
+      }
+
+      // Auto-mark as upcoming when tutor confirms
+      if (status === 'confirmed') {
+        status = 'upcoming';
       }
       
       if (status === 'completed' && userId !== session.tutorId) {
