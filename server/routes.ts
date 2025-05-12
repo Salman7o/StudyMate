@@ -17,10 +17,10 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
-  
+
   // Setup authentication
   setupAuth(app);
-  
+
   // Setup WebSocket server
   setupWebSocketServer(httpServer);
 
@@ -29,14 +29,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.id);
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // Don't return password
       const { password, ...userWithoutPassword } = user;
-      
+
       return res.json(userWithoutPassword);
     } catch (error) {
       console.error("Get user error:", error);
@@ -47,24 +47,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/users/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      
+
       // Check if the user is updating their own profile
       if (req.user.id !== userId) {
         return res.status(403).json({ message: "You can only update your own profile" });
       }
-      
+
       const userData = req.body;
       delete userData.password; // Don't allow password updates through this endpoint
-      
+
       const updatedUser = await storage.updateUser(userId, userData);
-      
+
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // Don't return password
       const { password, ...userWithoutPassword } = updatedUser;
-      
+
       return res.json(userWithoutPassword);
     } catch (error) {
       console.error("Update user error:", error);
@@ -84,21 +84,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           maxRate: req.query.maxRate ? parseInt(req.query.maxRate as string) : undefined,
           isAvailableNow: req.query.isAvailableNow === 'true'
         };
-        
+
         const tutors = await storage.searchTutorProfiles(filters);
         return res.json(tutors);
       } 
-      
+
       // If no query parameters, match based on student profile
       if (req.user && req.user.role === 'student') {
         console.log("Finding tutors for student user ID:", req.user.id);
-        
+
         // Get student's preferences from their profile
         const student = await storage.getUser(req.user.id);
         if (!student) {
           return res.status(404).json({ message: "Student profile not found" });
         }
-        
+
         // Extract relevant information from student profile for matching
         const filters = {
           subjects: student.subjects?.join(','), // Assuming subjects is stored as an array
@@ -106,12 +106,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           semester: student.semester,
           maxRate: student.maxBudget // Assuming student has a budget field
         };
-        
+
         console.log("Matching with filters:", filters);
         const tutors = await storage.searchTutorProfiles(filters);
         return res.json(tutors);
       }
-      
+
       // Fallback to returning all tutors if not a student or no profile data
       const tutors = await storage.searchTutorProfiles({});
       return res.json(tutors);
@@ -120,37 +120,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Server error" });
     }
   });
-  
+
   // Students routes
   app.get("/api/students", isAuthenticated, isAuthorized('tutor'), async (req, res) => {
     try {
       // Get the tutor subjects to filter students
       const userId = req.user.id!;
       console.log(`Finding students for tutor user ID: ${userId}`);
-      
+
       const tutorProfile = await storage.getTutorProfileByUserId(userId);
-      
+
       if (!tutorProfile) {
         console.log(`No tutor profile found for user ID: ${userId}`);
         return res.status(404).json({ message: "Tutor profile not found" });
       }
-      
+
       // Get tutor details for advanced filtering
       const tutorUser = await storage.getUser(userId);
       if (!tutorUser) {
         return res.status(404).json({ message: "Tutor user not found" });
       }
-      
+
       console.log(`Tutor subjects: ${JSON.stringify(tutorProfile.subjects)}`);
       console.log(`Tutor availability: ${tutorProfile.availability}`);
       console.log(`Tutor hourly rate: ${tutorProfile.hourlyRate}`);
       console.log(`Tutor program: ${tutorUser.program}`);
       console.log(`Tutor semester: ${tutorUser.semester}`);
-      
+
       // Parse program and semester from query params or use from tutor profile
       const programFilter = (req.query.program as string) || undefined;
       const semesterFilter = (req.query.semester as string) || undefined;
-      
+
       const filters = {
         subjects: tutorProfile.subjects,
         program: programFilter,
@@ -158,42 +158,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         availability: tutorProfile.availability, // Add availability for matching
         maxBudget: tutorProfile.hourlyRate // Students with budget >= tutor's hourly rate
       };
-      
+
       console.log(`Search filters: ${JSON.stringify(filters)}`);
-      
+
       const students = await storage.searchStudents(filters);
       console.log(`Found ${students.length} matching students`);
-      
+
       // Don't return passwords
       const studentsWithoutPasswords = students.map(student => {
         const { password, ...studentWithoutPassword } = student;
         return studentWithoutPassword;
       });
-      
+
       return res.json(studentsWithoutPasswords);
     } catch (error) {
       console.error("Search students error:", error);
       return res.status(500).json({ message: "Server error" });
     }
   });
-  
+
   app.get("/api/students/:id", isAuthenticated, async (req, res) => {
     try {
       const studentId = parseInt(req.params.id);
       const student = await storage.getUser(studentId);
-      
+
       if (!student) {
         return res.status(404).json({ message: "Student not found" });
       }
-      
+
       // Check if the user being requested is actually a student
       if (student.role !== 'student') {
         return res.status(404).json({ message: "Student not found" });
       }
-      
+
       // Don't return password
       const { password, ...studentWithoutPassword } = student;
-      
+
       return res.json(studentWithoutPassword);
     } catch (error) {
       console.error("Get student error:", error);
@@ -205,20 +205,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const tutorId = parseInt(req.params.id);
       const tutorProfile = await storage.getTutorProfile(tutorId);
-      
+
       if (!tutorProfile) {
         return res.status(404).json({ message: "Tutor profile not found" });
       }
-      
+
       const user = await storage.getUser(tutorProfile.userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "Tutor user not found" });
       }
-      
+
       // Don't return password
       const { password, ...userWithoutPassword } = user;
-      
+
       return res.json({
         ...tutorProfile,
         user: userWithoutPassword
@@ -233,22 +233,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const tutorProfileId = parseInt(req.params.id);
       const tutorProfile = await storage.getTutorProfile(tutorProfileId);
-      
+
       if (!tutorProfile) {
         return res.status(404).json({ message: "Tutor profile not found" });
       }
-      
+
       // Check if the user is updating their own profile
       if (req.user.id !== tutorProfile.userId) {
         return res.status(403).json({ message: "You can only update your own tutor profile" });
       }
-      
+
       const updatedProfile = await storage.updateTutorProfile(tutorProfileId, req.body);
-      
+
       if (!updatedProfile) {
         return res.status(404).json({ message: "Tutor profile not found" });
       }
-      
+
       return res.json(updatedProfile);
     } catch (error) {
       console.error("Update tutor profile error:", error);
@@ -260,12 +260,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/sessions", isAuthenticated, async (req, res) => {
     try {
       console.log("Session data received:", JSON.stringify(req.body, null, 2));
-      
+
       // First fix date if sent as Date object and not string
       if (req.body.date && req.body.date instanceof Date) {
         req.body.date = req.body.date.toISOString();
       }
-      
+
       // Ensure all required fields are present and valid
       const sessionData = {
         studentId: req.body.studentId,
@@ -279,20 +279,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "pending", // Always start as pending
         description: req.body.description || "",
       };
-      
+
       console.log("Processed session data:", JSON.stringify(sessionData, null, 2));
-      
+
       const result = validateZodSchema(insertSessionSchema, sessionData);
       if (!result.success) {
         console.error("Validation failed:", result.error);
         return res.status(400).json({ message: result.error });
       }
-      
+
       // Make sure the student ID matches the current user if student is booking
       if (result.data.studentId !== req.user.id) {
         return res.status(403).json({ message: "You can only book sessions for yourself" });
       }
-      
+
       const session = await storage.createSession(result.data);
       console.log("Session created successfully:", session);
       return res.status(201).json(session);
@@ -306,23 +306,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id!;
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       let sessions;
       if (user.role === 'student') {
         sessions = await storage.getSessionsByStudent(userId);
       } else { // tutor
         sessions = await storage.getSessionsByTutor(userId);
       }
-      
+
       // Add tutor/student details to each session
       const sessionsWithDetails = await Promise.all(sessions.map(async (session) => {
         const tutor = await storage.getUser(session.tutorId);
         const student = await storage.getUser(session.studentId);
-        
+
         return {
           ...session,
           tutor: tutor ? { 
@@ -337,7 +337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } : undefined
         };
       }));
-      
+
       return res.json(sessionsWithDetails);
     } catch (error) {
       console.error("Get sessions error:", error);
@@ -348,22 +348,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/sessions/pending", isAuthenticated, isAuthorized('tutor'), async (req, res) => {
     try {
       const tutorId = req.query.tutorId ? parseInt(req.query.tutorId as string) : req.user.id!;
-      
+
       // Ensure the user is authorized to view this data (must be the tutor themselves)
       if (tutorId !== req.user.id) {
         return res.status(403).json({ message: "You can only view pending sessions for yourself" });
       }
-      
+
       // Get all sessions for this tutor
       const allSessions = await storage.getSessionsByTutor(tutorId);
-      
+
       // Filter to only pending sessions
       const pendingSessions = allSessions.filter(session => session.status === 'pending');
-      
+
       // Add student details to each session
       const sessionsWithDetails = await Promise.all(pendingSessions.map(async (session) => {
         const student = await storage.getUser(session.studentId);
-        
+
         return {
           ...session,
           student: student ? {
@@ -376,7 +376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } : undefined
         };
       }));
-      
+
       return res.json(sessionsWithDetails);
     } catch (error) {
       console.error("Get pending sessions error:", error);
@@ -388,57 +388,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sessionId = parseInt(req.params.id);
       const { status } = req.body;
-      
+
       if (!status || !['pending', 'confirmed', 'completed', 'cancelled'].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
-      
+
       const session = await storage.getSession(sessionId);
-      
+
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
       }
-      
+
       // Check authorization
       const userId = req.user.id!;
       if (session.studentId !== userId && session.tutorId !== userId) {
         return res.status(403).json({ message: "You are not authorized to update this session" });
       }
-      
-      // Handle different status updates
-      let finalStatus = status;
-      
-      // Enforce status transition rules
-      // For confirmed/declined status, only the recipient can update
+
+      // Handle different status updates based on user role
       if (status === 'confirmed' || status === 'declined') {
-        if (session.tutorId === userId) {
-          // Tutor can only confirm/decline student-initiated sessions
-          if (session.studentId !== session.createdBy) {
-            return res.status(403).json({ message: "You can only respond to student-initiated sessions" });
-          }
-        } else if (session.studentId === userId) {
-          // Student can only confirm/decline tutor-initiated sessions  
-          if (session.tutorId !== session.createdBy) {
-            return res.status(403).json({ message: "You can only respond to tutor-initiated sessions" });
-          }
-        } else {
-          return res.status(403).json({ message: "You are not authorized to update this session" });
+        if (userId === session.tutorId) {
+          // Allow tutors to confirm/decline
+          const updatedSession = await storage.updateSessionStatus(sessionId, status);
+          return res.json(updatedSession);
         }
+        return res.status(403).json({ message: "Only tutors can confirm or decline sessions" });
       }
-      
-      // For cancelled status, only the creator can cancel
+
       if (status === 'cancelled') {
-        if (session.createdBy !== userId) {
-          return res.status(403).json({ message: "Only the booking creator can cancel this session" });
-        }
+        // Both students and tutors can cancel their own sessions
+        const updatedSession = await storage.updateSessionStatus(sessionId, status);
+        return res.json(updatedSession);
       }
-      
+
+      if (status === 'completed') {
+        if (userId === session.tutorId) {
+          const updatedSession = await storage.updateSessionStatus(sessionId, status);
+          return res.json(updatedSession);
+        }
+        return res.status(403).json({ message: "Only tutors can mark sessions as completed" });
+      }
+
       const updatedSession = await storage.updateSessionStatus(sessionId, finalStatus);
-      
+
       if (!updatedSession) {
         return res.status(404).json({ message: "Session not found" });
       }
-      
+
       return res.json(updatedSession);
     } catch (error) {
       console.error("Update session status error:", error);
@@ -453,27 +449,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!result.success) {
         return res.status(400).json({ message: result.error });
       }
-      
+
       // Make sure the student ID matches the current user
       if (result.data.studentId !== req.user.id) {
         return res.status(403).json({ message: "You can only leave reviews as yourself" });
       }
-      
+
       // Verify that the session exists and is completed
       const session = await storage.getSession(result.data.sessionId);
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
       }
-      
+
       if (session.status !== 'completed') {
         return res.status(400).json({ message: "You can only review completed sessions" });
       }
-      
+
       // Check if the user was the student for this session
       if (session.studentId !== req.user.id) {
         return res.status(403).json({ message: "You can only review sessions you participated in" });
       }
-      
+
       const review = await storage.createReview(result.data);
       return res.status(201).json(review);
     } catch (error) {
@@ -481,31 +477,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Server error" });
     }
   });
-  
+
   // Tutor feedback for sessions (no rating, just comments)
   app.post("/api/sessions/feedback", isAuthenticated, isAuthorized('tutor'), async (req, res) => {
     try {
       const { sessionId, comment } = req.body;
-      
+
       if (!sessionId || !comment) {
         return res.status(400).json({ message: "Session ID and comment are required" });
       }
-      
+
       // Verify that the session exists and is completed
       const session = await storage.getSession(sessionId);
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
       }
-      
+
       if (session.status !== 'completed') {
         return res.status(400).json({ message: "You can only provide feedback for completed sessions" });
       }
-      
+
       // Check if the user was the tutor for this session
       if (session.tutorId !== req.user.id) {
         return res.status(403).json({ message: "You can only provide feedback for sessions you participated in" });
       }
-      
+
       // For the prototype, we'll just return success - in a real app, this would save to the database
       return res.status(200).json({ 
         success: true, 
@@ -524,11 +520,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const tutorId = parseInt(req.params.id);
       const reviews = await storage.getReviewsByTutor(tutorId);
-      
+
       // Add student details to each review
       const reviewsWithStudents = await Promise.all(reviews.map(async (review) => {
         const student = await storage.getUser(review.studentId);
-        
+
         return {
           ...review,
           student: student ? {
@@ -538,7 +534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } : undefined
         };
       }));
-      
+
       return res.json(reviewsWithStudents);
     } catch (error) {
       console.error("Get tutor reviews error:", error);
@@ -564,23 +560,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!result.success) {
         return res.status(400).json({ message: result.error });
       }
-      
+
       // Check if the conversation already exists
       const existingConversation = await storage.getConversationByParticipants(
         result.data.participantOneId,
         result.data.participantTwoId
       );
-      
+
       if (existingConversation) {
         return res.json(existingConversation); // Return existing conversation
       }
-      
+
       // Make sure one of the participants is the current user
       const userId = req.user.id!;
       if (result.data.participantOneId !== userId && result.data.participantTwoId !== userId) {
         return res.status(403).json({ message: "You can only create conversations that include yourself" });
       }
-      
+
       const conversation = await storage.createConversation(result.data);
       return res.status(201).json(conversation);
     } catch (error) {
@@ -594,26 +590,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const conversationId = parseInt(req.params.id);
       const conversation = await storage.getConversation(conversationId);
-      
+
       if (!conversation) {
         return res.status(404).json({ message: "Conversation not found" });
       }
-      
+
       // Check if the user is part of the conversation
       const userId = req.user.id!;
       if (conversation.participantOneId !== userId && conversation.participantTwoId !== userId) {
         return res.status(403).json({ message: "You are not part of this conversation" });
       }
-      
+
       const messages = await storage.getMessagesByConversation(conversationId);
-      
+
       // Mark messages as read if the user is the receiver
       await Promise.all(
         messages
           .filter(message => message.receiverId === userId && message.status !== 'read')
           .map(message => storage.updateMessageStatus(message.id, 'read'))
       );
-      
+
       return res.json(messages);
     } catch (error) {
       console.error("Get messages error:", error);
@@ -625,34 +621,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const conversationId = parseInt(req.params.id);
       const conversation = await storage.getConversation(conversationId);
-      
+
       if (!conversation) {
         return res.status(404).json({ message: "Conversation not found" });
       }
-      
+
       // Check if the user is part of the conversation
       const userId = req.user.id!;
       if (conversation.participantOneId !== userId && conversation.participantTwoId !== userId) {
         return res.status(403).json({ message: "You are not part of this conversation" });
       }
-      
+
       // Determine receiver ID
       const receiverId = conversation.participantOneId === userId
         ? conversation.participantTwoId
         : conversation.participantOneId;
-      
+
       const messageData = {
         ...req.body,
         conversationId,
         senderId: userId,
         receiverId
       };
-      
+
       const result = validateZodSchema(insertMessageSchema, messageData);
       if (!result.success) {
         return res.status(400).json({ message: result.error });
       }
-      
+
       const message = await storage.createMessage(result.data);
       return res.status(201).json(message);
     } catch (error) {
@@ -668,17 +664,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Parse filter parameters from query
       const { subject, program, semester } = req.query;
-      
+
       // Get the tutor profile to get their subjects
       const tutorProfile = await storage.getTutorProfileByUserId(req.user.id!);
-      
+
       // Create filter object
       const filters: Partial<{
         subjects: string[];
         program: string;
         semester: string;
       }> = {};
-      
+
       // Add filters based on query parameters
       if (subject) {
         filters.subjects = [subject as string];
@@ -686,18 +682,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // If no specific subject filter is provided, use tutor's subjects
         filters.subjects = tutorProfile.subjects;
       }
-      
+
       if (program) {
         filters.program = program as string;
       }
-      
+
       if (semester) {
         filters.semester = semester as string;
       }
-      
+
       // Get filtered students
       const students = await storage.searchStudents(filters);
-      
+
       // Map to simplified objects for response
       const studentData = students.map(student => ({
         id: student.id,
@@ -709,7 +705,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileImage: student.profileImage,
         bio: student.bio
       }));
-      
+
       return res.json(studentData);
     } catch (error) {
       console.error("Get interested students error:", error);
@@ -722,7 +718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id!;
       const existingProfile = await storage.getTutorProfileByUserId(userId);
-      
+
       if (existingProfile) {
         return res.status(400).json({ message: "Tutor profile already exists" });
       }
@@ -744,7 +740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Server error" });
     }
   });
-  
+
   app.get("/api/payment-methods", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id!;
@@ -763,12 +759,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId
       };
-      
+
       const result = validateZodSchema(insertPaymentMethodSchema, paymentData);
       if (!result.success) {
         return res.status(400).json({ message: result.error });
       }
-      
+
       const paymentMethod = await storage.createPaymentMethod(result.data);
       return res.status(201).json(paymentMethod);
     } catch (error) {
@@ -781,18 +777,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const paymentMethodId = parseInt(req.params.id);
       const userId = req.user.id!;
-      
+
       const paymentMethod = await storage.getPaymentMethod(paymentMethodId);
-      
+
       if (!paymentMethod) {
         return res.status(404).json({ message: "Payment method not found" });
       }
-      
+
       // Check if the payment method belongs to the user
       if (paymentMethod.userId !== userId) {
         return res.status(403).json({ message: "You can only set your own payment methods as default" });
       }
-      
+
       await storage.updatePaymentMethodDefault(userId, paymentMethodId);
       return res.json({ message: "Payment method set as default" });
     } catch (error) {
