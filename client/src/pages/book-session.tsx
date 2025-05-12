@@ -37,29 +37,29 @@ export default function BookSession() {
   const [, setLocation] = useLocation();
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
-  
+
   // Get student ID from URL query parameters
   const searchParams = new URLSearchParams(window.location.search);
   const studentId = searchParams.get('studentId');
-  
+
   // Redirect if not authenticated or if user is a student
   useEffect(() => {
     if (!isAuthenticated) {
       setLocation("/auth/login");
       return;
     }
-    
+
     if (user?.role === "student") {
       setLocation("/profile");
       return;
     }
-    
+
     if (!studentId) {
       setLocation("/find-students");
       return;
     }
   }, [isAuthenticated, user, setLocation, studentId]);
-  
+
   // Fetch student data
   const { data: student, isLoading } = useQuery({
     queryKey: [`/api/students/${studentId}`],
@@ -81,7 +81,7 @@ export default function BookSession() {
       }
     },
   });
-  
+
   const [sessionType, setSessionType] = useState("One-on-One Tutoring");
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [startTime, setStartTime] = useState("14:00");
@@ -102,7 +102,7 @@ export default function BookSession() {
 
   // Get the tutor's hourly rate - if not available, use a default value
   const [hourlyRate, setHourlyRate] = useState(1000); // Default hourly rate
-  
+
   // Fetch the tutor profile to get the hourly rate
   useEffect(() => {
     if (user?.id) {
@@ -121,7 +121,7 @@ export default function BookSession() {
           console.error("Error fetching tutor profile:", error);
         }
       };
-      
+
       fetchTutorProfile();
     }
   }, [user?.id]);
@@ -156,31 +156,32 @@ export default function BookSession() {
 
     try {
       setIsSubmitting(true);
-      
+
       const sessionData = {
         studentId: parseInt(studentId!),
         tutorId: user.id,
         subject: subject,
         sessionType: sessionType,
-        date: date.toISOString(),
+        date: date,
         startTime: startTime,
         duration: parseInt(duration),
         totalAmount: totalAmount,
         description: description,
         paymentMethod: paymentMethod,
         paymentPhone: phoneNumber,
+        status: "pending",
       };
-      
+
       await apiRequest("POST", "/api/sessions", sessionData);
-      
+
       toast({
         title: "Session booked successfully",
         description: "The student will be notified of your booking request",
       });
-      
+
       // Invalidate sessions cache
       queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
-      
+
       // Redirect to my sessions page
       setLocation("/my-sessions");
     } catch (error) {
@@ -263,7 +264,7 @@ export default function BookSession() {
                     </SelectContent>
                   </Select>
                 </div>
-              
+
                 <div>
                   <Label htmlFor="session-type" className="mb-1 block">Session Type</Label>
                   <Select onValueChange={setSessionType} defaultValue={sessionType}>
@@ -280,7 +281,7 @@ export default function BookSession() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="date" className="mb-1 block">Date</Label>
                   <Popover>
@@ -307,7 +308,7 @@ export default function BookSession() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="start-time" className="mb-1 block">Start Time</Label>
@@ -346,7 +347,7 @@ export default function BookSession() {
                     </Select>
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="description" className="mb-1 block">Topic/Description</Label>
                   <Textarea
@@ -357,7 +358,7 @@ export default function BookSession() {
                     rows={3}
                   />
                 </div>
-                
+
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Your Rate:</span>
@@ -376,7 +377,7 @@ export default function BookSession() {
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     Please select your preferred payment method. You will receive payment instructions after the session is confirmed.
                   </p>
-                  
+
                   <RadioGroup defaultValue={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
                     <div className="flex items-center space-x-2 border p-3 rounded-md">
                       <RadioGroupItem value="easypaisa" id="easypaisa" />
@@ -387,7 +388,7 @@ export default function BookSession() {
                         <span>EasyPaisa</span>
                       </Label>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 border p-3 rounded-md">
                       <RadioGroupItem value="jazzcash" id="jazzcash" />
                       <Label htmlFor="jazzcash" className="flex items-center">
@@ -399,7 +400,7 @@ export default function BookSession() {
                     </div>
                   </RadioGroup>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="phone" className="mb-1 block">Phone Number</Label>
                   <Input 
@@ -412,19 +413,19 @@ export default function BookSession() {
                     This number will be used for the {paymentMethod === 'easypaisa' ? 'EasyPaisa' : 'JazzCash'} transaction.
                   </p>
                 </div>
-                
+
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
                   <h4 className="font-medium mb-2">Booking Summary</h4>
                   <div className="grid grid-cols-2 gap-1 text-sm">
                     <span className="text-gray-600 dark:text-gray-400">Student:</span>
                     <span className="font-medium">{student.fullName}</span>
-                    
+
                     <span className="text-gray-600 dark:text-gray-400">Subject:</span>
                     <span className="font-medium">{subject}</span>
-                    
+
                     <span className="text-gray-600 dark:text-gray-400">Session Type:</span>
                     <span className="font-medium">{sessionType}</span>
-                    
+
                     <span className="text-gray-600 dark:text-gray-400">Date & Time:</span>
                     <span className="font-medium">
                       {date ? format(date, "PPP") : ''} at {startTime.includes(':') ? 
@@ -433,17 +434,17 @@ export default function BookSession() {
                           `${startTime} AM` : 
                         startTime}
                     </span>
-                    
+
                     <span className="text-gray-600 dark:text-gray-400">Duration:</span>
                     <span className="font-medium">{parseInt(duration) / 60} hour(s)</span>
-                    
+
                     <span className="text-gray-600 dark:text-gray-400 col-span-2 mt-2 border-t pt-2">Total Payment:</span>
                     <span className="font-bold text-lg col-span-2 text-primary">Rs. {totalAmount}</span>
                   </div>
                 </div>
               </div>
             )}
-            
+
             <DialogFooter>
               {step === 1 ? (
                 <>
