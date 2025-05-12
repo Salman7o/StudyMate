@@ -288,12 +288,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: result.error });
       }
       
-      // Allow both students booking for themselves and tutors booking for students
-      if (req.user.role === 'student' && result.data.studentId !== req.user.id) {
+      // Make sure the student ID matches the current user if student is booking
+      if (result.data.studentId !== req.user.id) {
         return res.status(403).json({ message: "You can only book sessions for yourself" });
-      }
-      if (req.user.role === 'tutor' && result.data.tutorId !== req.user.id) {
-        return res.status(403).json({ message: "You can only book sessions as yourself" });
       }
       
       const session = await storage.createSession(result.data);
@@ -409,14 +406,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Additional authorization checks based on status
-      // Allow tutors to immediately confirm sessions
       if (status === 'confirmed' && userId !== session.tutorId) {
         return res.status(403).json({ message: "Only tutors can confirm sessions" });
-      }
-
-      // Auto-mark as upcoming when tutor confirms
-      if (status === 'confirmed') {
-        status = 'upcoming';
       }
       
       if (status === 'completed' && userId !== session.tutorId) {
