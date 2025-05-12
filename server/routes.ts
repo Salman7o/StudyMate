@@ -409,31 +409,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let finalStatus = status;
       
       // Enforce status transition rules
-      if (status === 'confirmed') {
-        // Check if user is authorized to confirm
-        if (!session.createdBy) {
-          return res.status(400).json({ message: "Session has no creator information" });
-        }
-        
-        // For student-initiated bookings, only tutor can confirm
-        if (session.createdBy === session.studentId && userId !== session.tutorId) {
-          return res.status(403).json({ message: "Only tutors can confirm student-initiated sessions" });
-        }
-        
-        // For tutor-initiated bookings, only student can confirm
-        if (session.createdBy === session.tutorId && userId !== session.studentId) {
-          return res.status(403).json({ message: "Only students can confirm tutor-initiated sessions" });
-        }
-      }
-      else if (status === 'declined') {
-        // Only allow declining by the non-creator
-        if (userId === session.createdBy) {
-          return res.status(403).json({ message: "You cannot decline your own booking request" });
+      // For confirmed/declined status, only the recipient can update
+      if (status === 'confirmed' || status === 'declined') {
+        if (session.tutorId === userId) {
+          // Tutor can only confirm/decline student-initiated sessions
+          if (session.studentId !== session.createdBy) {
+            return res.status(403).json({ message: "You can only respond to student-initiated sessions" });
+          }
+        } else if (session.studentId === userId) {
+          // Student can only confirm/decline tutor-initiated sessions  
+          if (session.tutorId !== session.createdBy) {
+            return res.status(403).json({ message: "You can only respond to tutor-initiated sessions" });
+          }
+        } else {
+          return res.status(403).json({ message: "You are not authorized to update this session" });
         }
       }
-      else if (status === 'cancelled') {
-        // Only allow cancellation by the creator
-        if (userId !== session.createdBy) {
+      
+      // For cancelled status, only the creator can cancel
+      if (status === 'cancelled') {
+        if (session.createdBy !== userId) {
           return res.status(403).json({ message: "Only the booking creator can cancel this session" });
         }
       }
