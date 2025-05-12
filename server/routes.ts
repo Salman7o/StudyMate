@@ -443,19 +443,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Reviews routes
-  app.post("/api/reviews", isAuthenticated, isAuthorized('student'), async (req, res) => {
+  app.post("/api/reviews", isAuthenticated, async (req, res) => {
     try {
       const result = validateZodSchema(insertReviewSchema, req.body);
       if (!result.success) {
         return res.status(400).json({ message: result.error });
       }
 
-      // Make sure the student ID matches the current user
-      if (result.data.studentId !== req.user.id) {
-        return res.status(403).json({ message: "You can only leave reviews as yourself" });
-      }
-
-      // Verify that the session exists and is completed
       const session = await storage.getSession(result.data.sessionId);
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
@@ -465,12 +459,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You can only review completed sessions" });
       }
 
-      // Check if the user was the student for this session
-      if (session.studentId !== req.user.id) {
-        return res.status(403).json({ message: "You can only review sessions you participated in" });
+      const user = await storage.getUser(req.user.id!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
-      const review = await storage.createReview(result.data);
+      // Set up review data based on user role
+      const reviewData = {
+        sessionId: result.data.sessionId,
+        reviewerId: req.user.id!,
+        targetId: user.role === 'student' ? session.tutorId : session.studentId,
+        rating: user.role === 'student' ? result.data.rating : null,
+        comment: result.data.comment,
+        reviewerRole: user.role,
+        isPublic: user.role === 'student'
+      };
+
+      const review = await storage.createReview(reviewData);
+
+      // Update tutor's average rating if this is a student review
+      if (user.role === 'student') {
+        const tutorProfile = await storage.getTutorProfileByUserId(session.tutorId);
+        if (tutorProfile) {
+          const reviews = await storage.getReviewsByTutor(session.tutorId);
+          const avgRating = reviews.reduce((acc, rev) => acc + (rev.rating || 0), 0) / reviews.length;
+          await storage.updateTutorProfile(tutorProfile.id, {
+            rating: Math.round(avgRating),
+            reviewCount: reviews.length
+          });
+        }
+      }
+
       return res.status(201).json(review);
     } catch (error) {
       console.error("Create review error:", error);
