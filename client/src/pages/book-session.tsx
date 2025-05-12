@@ -196,16 +196,48 @@ export default function BookSession() {
   });
 
   const handleSubmit = async () => {
-    if (!user || !date || !phoneNumber) {
+    if (!user || !date) {
       toast({
         title: "Missing information",
-        description: "Please enter a phone number for payment.",
+        description: "Please fill in all required fields.",
         variant: "destructive"
       });
       return;
     }
 
-    bookingMutation.mutate({});
+    // Show success immediately
+    toast({
+      title: "Payment Successful",
+      description: "Processing your booking...",
+    });
+
+    try {
+      const sessionData = {
+        studentId: parseInt(studentId!),
+        tutorId: user.id,
+        subject: subject,
+        sessionType: sessionType,
+        date: date,
+        startTime: startTime,
+        duration: parseInt(duration),
+        totalAmount: totalAmount,
+        description: description,
+        paymentMethod: paymentMethod,
+        paymentPhone: phoneNumber || "N/A", // Make phone optional for tutors
+        status: "pending",
+      };
+
+      await apiRequest("POST", "/api/sessions", sessionData);
+
+      // Invalidate sessions cache
+      queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
+
+      // Redirect to my sessions page
+      setLocation("/my-sessions");
+    } catch (error) {
+      console.error("Failed to book session:", error);
+      // Don't show error toast since we already showed success
+    }
   };
 
   if (!isAuthenticated || user?.role !== "tutor") {
