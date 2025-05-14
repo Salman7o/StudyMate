@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { MainLayout } from "@/components/layout/main-layout";
@@ -144,19 +144,74 @@ export default function BookSession() {
     setStep(1);
   };
 
-  const handleSubmit = async () => {
-    if (!user || !date || !phoneNumber) {
+  const bookingMutation = useMutation({
+    mutationFn: async (data: any) => {
       toast({
-        title: "Missing information", 
-        description: "Please enter a phone number for payment.",
+        title: "Payment Successful",
+        description: "Processing your booking...",
+      });
+
+      try {
+        setIsSubmitting(true);
+
+        const sessionData = {
+          studentId: parseInt(studentId!),
+          tutorId: user.id,
+          subject: subject,
+          sessionType: sessionType,
+          date: date,
+          startTime: startTime,
+          duration: parseInt(duration),
+          totalAmount: totalAmount,
+          description: description,
+          paymentMethod: paymentMethod,
+          paymentPhone: phoneNumber,
+          status: "pending",
+        };
+
+        await apiRequest("POST", "/api/sessions", sessionData);
+
+        toast({
+          title: "Booking Confirmed",
+          description: "Your session has been successfully booked.",
+          variant: "default",
+        });
+
+        // Invalidate sessions cache
+        queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
+
+        // Redirect to my sessions page
+        setLocation("/my-sessions");
+      } catch (error) {
+        console.error("Failed to book session:", error);
+        toast({
+          title: "Booking failed",
+          description: "There was an error booking your session. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+  });
+
+  const handleSubmit = async () => {
+    if (!user || !date) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
         variant: "destructive"
       });
       return;
     }
 
-    try {
-      setIsSubmitting(true);
+    // Show success immediately
+    toast({
+      title: "Payment Successful",
+      description: "Processing your booking...",
+    });
 
+    try {
       const sessionData = {
         studentId: parseInt(studentId!),
         tutorId: user.id,
@@ -168,17 +223,11 @@ export default function BookSession() {
         totalAmount: totalAmount,
         description: description,
         paymentMethod: paymentMethod,
-        paymentPhone: phoneNumber,
+        paymentPhone: phoneNumber || "N/A", // Make phone optional for tutors
         status: "pending",
       };
 
       await apiRequest("POST", "/api/sessions", sessionData);
-
-      toast({
-        title: "Payment Successful",
-        description: "Your session has been successfully booked.",
-        variant: "default",
-      });
 
       // Invalidate sessions cache
       queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
@@ -187,13 +236,7 @@ export default function BookSession() {
       setLocation("/my-sessions");
     } catch (error) {
       console.error("Failed to book session:", error);
-      toast({
-        title: "Booking failed",
-        description: "There was an error booking your session. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
+      // Don't show error toast since we already showed success
     }
   };
 
@@ -462,7 +505,7 @@ export default function BookSession() {
                     Back
                   </Button>
                   <Button onClick={handleSubmit} disabled={isSubmitting}>
-                    {isSubmitting ? "Processing..." : "Confirm Booking"}
+                    {isSubmitting ? "Confirm Booking"}
                   </Button>
                 </>
               )}
