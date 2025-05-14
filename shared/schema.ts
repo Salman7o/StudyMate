@@ -62,12 +62,10 @@ export const sessions = pgTable("sessions", {
 export const reviews = pgTable("reviews", {
   id: serial("id").primaryKey(),
   sessionId: integer("session_id").references(() => sessions.id).notNull(),
-  reviewerId: integer("reviewer_id").references(() => users.id).notNull(),
-  targetId: integer("target_id").references(() => users.id).notNull(),
-  rating: integer("rating"),  // Optional for tutor reviews
-  comment: text("comment").notNull(),
-  reviewerRole: text("reviewer_role").notNull(), // 'student' or 'tutor'
-  isPublic: boolean("is_public").default(true),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  tutorId: integer("tutor_id").references(() => users.id).notNull(),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

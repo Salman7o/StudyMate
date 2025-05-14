@@ -25,7 +25,7 @@ export interface IStorage {
     availability: string;
     maxBudget: number;
   }>): Promise<User[]>;
-
+  
   // Tutor profile related methods
   getTutorProfile(id: number): Promise<TutorProfile | undefined>;
   getTutorProfileByUserId(userId: number): Promise<TutorProfile | undefined>;
@@ -38,19 +38,19 @@ export interface IStorage {
     maxRate: number;
     isAvailableNow: boolean;
   }>): Promise<(TutorProfile & { user: User })[]>;
-
+  
   // Session related methods
   getSession(id: number): Promise<Session | undefined>;
   getSessionsByStudent(studentId: number): Promise<Session[]>;
   getSessionsByTutor(tutorId: number): Promise<Session[]>;
   createSession(session: InsertSession): Promise<Session>;
   updateSessionStatus(id: number, status: 'pending' | 'confirmed' | 'completed' | 'cancelled'): Promise<Session | undefined>;
-
+  
   // Review related methods
   getReview(id: number): Promise<Review | undefined>;
   getReviewsByTutor(tutorId: number): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
-
+  
   // Conversation related methods
   getConversation(id: number): Promise<Conversation | undefined>;
   getConversationByParticipants(userOneId: number, userTwoId: number): Promise<Conversation | undefined>;
@@ -59,19 +59,19 @@ export interface IStorage {
     lastMessage?: Message
   })[]>;
   createConversation(conversation: InsertConversation): Promise<Conversation>;
-
+  
   // Message related methods
   getMessage(id: number): Promise<Message | undefined>;
   getMessagesByConversation(conversationId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   updateMessageStatus(id: number, status: 'sent' | 'delivered' | 'read'): Promise<Message | undefined>;
-
+  
   // Payment method related methods
   getPaymentMethod(id: number): Promise<PaymentMethod | undefined>;
   getPaymentMethodsByUser(userId: number): Promise<PaymentMethod[]>;
   createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod>;
   updatePaymentMethodDefault(userId: number, paymentMethodId: number): Promise<void>;
-
+  
   // Session store for authentication
   sessionStore: any;
 }
@@ -84,7 +84,7 @@ export class MemStorage implements IStorage {
   private conversations: Map<number, Conversation>;
   private messages: Map<number, Message>;
   private paymentMethods: Map<number, PaymentMethod>;
-
+  
   private userId: number = 1;
   private tutorProfileId: number = 1;
   private sessionId: number = 1;
@@ -92,7 +92,7 @@ export class MemStorage implements IStorage {
   private conversationId: number = 1;
   private messageId: number = 1;
   private paymentMethodId: number = 1;
-
+  
   // Add session store
   sessionStore: any;
 
@@ -104,20 +104,20 @@ export class MemStorage implements IStorage {
     this.conversations = new Map();
     this.messages = new Map();
     this.paymentMethods = new Map();
-
+    
     // Initialize session store (in-memory)
     const MemoryStore = memorystore(expressSession);
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // prune expired entries every 24h
     });
-
+    
     // Initialize with some data
     this.initializeData();
   }
 
   private initializeData() {
     // Initialize with some test data for development
-
+    
     // Create a john user for the sessions and conversations
     const john = this.createUser({
       username: "john",
@@ -134,7 +134,7 @@ export class MemStorage implements IStorage {
       subjects: ["Programming", "Math", "Physics"],
       availability: "Weekends and evenings"
     });
-
+    
     const zain = this.createUser({
       username: "zainahmed",
       password: "$2b$10$VGqMIj6TjlTiV05vLlIwKOZw4BpWCePKvBrJ/JZ6XqEqWgNSXcW4G",
@@ -150,7 +150,7 @@ export class MemStorage implements IStorage {
       subjects: ["Mechanics", "Electromagnetism", "calculas"],
       availability: "Tue-Thu, 3PM-8PM; Saturday mornings"
     });
-
+    
     // Add students that match with all tutors (for testing)
     const ali = this.createUser({
       username: "aliraza",
@@ -167,7 +167,7 @@ export class MemStorage implements IStorage {
       subjects: ["programming", "data structures", "algorithms"],
       availability: "Evenings and weekends"
     });
-
+    
     const sara = this.createUser({
       username: "sarakhan",
       password: "$2b$10$VGqMIj6TjlTiV05vLlIwKOZw4BpWCePKvBrJ/JZ6XqEqWgNSXcW4G",
@@ -183,7 +183,7 @@ export class MemStorage implements IStorage {
       subjects: ["calculus", "linear algebra"],
       availability: "Monday to Friday, 2PM-6PM"
     });
-
+    
     const hasan = this.createUser({
       username: "hasanali",
       password: "$2b$10$VGqMIj6TjlTiV05vLlIwKOZw4BpWCePKvBrJ/JZ6XqEqWgNSXcW4G",
@@ -396,11 +396,11 @@ export class MemStorage implements IStorage {
     this.users.set(id, updatedUser);
     return updatedUser;
   }
-
+  
   async getAllUsers(): Promise<User[]> {
     return Array.from(this.users.values());
   }
-
+  
   async searchStudents(filters: Partial<{
     subjects: string[];
     program: string;
@@ -411,13 +411,13 @@ export class MemStorage implements IStorage {
     let students = Array.from(this.users.values()).filter(user => 
       user.role === 'student'
     );
-
+    
     console.log(`Found ${students.length} total students`);
-
+    
     // Filter by subjects - these are the most important matching criteria
     if (filters.subjects && filters.subjects.length > 0) {
       console.log(`Filtering students by subjects: ${JSON.stringify(filters.subjects)}`);
-
+      
       students = students.filter(student => {
         // Check if student has listed subjects that match any of the filter subjects
         // If student doesn't have subjects, include them in results to maximize matches
@@ -425,35 +425,35 @@ export class MemStorage implements IStorage {
           console.log(`Student ${student.id} has no subjects, including them in results`);
           return true;
         }
-
+        
         const matchFound = filters.subjects!.some(tutorSubject => 
           student.subjects?.some(studentSubject => {
             // Normalize both strings for more lenient matching
             const normalizedTutorSubject = tutorSubject.toLowerCase().trim();
             const normalizedStudentSubject = studentSubject.toLowerCase().trim();
-
+            
             // Check for exact matches or partial matches in either direction
             const isMatch = normalizedStudentSubject === normalizedTutorSubject ||
                    normalizedStudentSubject.includes(normalizedTutorSubject) ||
                    normalizedTutorSubject.includes(normalizedStudentSubject);
-
+            
             if (isMatch) {
               console.log(`Subject match found between tutor subject "${tutorSubject}" and student subject "${studentSubject}"`);
             }
-
+            
             return isMatch;
           })
         );
-
+        
         if (matchFound) {
           console.log(`Student ${student.id} matches subject criteria`);
         }
-
+        
         return matchFound;
       });
       console.log(`After subjects filter: ${students.length} students`);
     }
-
+    
     // Filter by program if specified
     if (filters.program) {
       students = students.filter(student => 
@@ -461,7 +461,7 @@ export class MemStorage implements IStorage {
       );
       console.log(`After program filter: ${students.length} students`);
     }
-
+    
     // Filter by semester if specified
     if (filters.semester) {
       students = students.filter(student => 
@@ -469,18 +469,18 @@ export class MemStorage implements IStorage {
       );
       console.log(`After semester filter: ${students.length} students`);
     }
-
+    
     // Filter by availability if the tutor's availability is known
     if (filters.availability) {
       // Match based on overlapping availability windows
       const tutorAvailability = filters.availability.toLowerCase();
-
+      
       students = students.filter(student => {
         // If student doesn't specify availability, include them anyway to maximize matches
         if (!student.availability) return true;
-
+        
         const studentAvailability = student.availability.toLowerCase();
-
+        
         // More comprehensive day matching including abbreviations and full names
         const dayPatterns = [
           // Full names
@@ -492,40 +492,40 @@ export class MemStorage implements IStorage {
           // Day ranges
           'mon-fri', 'sat-sun'
         ];
-
+        
         const dayMatch = dayPatterns.some(day => 
           tutorAvailability.includes(day) && studentAvailability.includes(day)
         );
-
+        
         // More comprehensive time period matching
         const timePeriods = [
           'morning', 'afternoon', 'evening', 'night', 
           'am', 'pm', 'noon', 'midnight',
           'early', 'late'
         ];
-
+        
         const timeMatch = timePeriods.some(period => 
           tutorAvailability.includes(period) && studentAvailability.includes(period)
         );
-
+        
         // Advanced time matching (handles formats like 2PM, 14:00, 2-4pm, etc.)
         const extractTimeInfo = (availText: string) => {
           const times: any[] = [];
-
+          
           // Match simple time formats: 2PM, 3:00, etc.
           const simpleMatches = availText.match(/\d+[\s]*(am|pm|:\d+)/gi) || [];
           times.push(...simpleMatches);
-
+          
           // Match time ranges: 2-4PM, 9:00-11:00, etc.
           const rangeMatches = availText.match(/\d+[\s]*(-|to|–)[\s]*\d+[\s]*(am|pm)/gi) || [];
           times.push(...rangeMatches);
-
+          
           return times;
         };
-
+        
         const tutorTimes = extractTimeInfo(tutorAvailability);
         const studentTimes = extractTimeInfo(studentAvailability);
-
+        
         const timeOverlapMatch = tutorTimes.length === 0 || studentTimes.length === 0 || 
           tutorTimes.some(tutorTime => 
             studentTimes.some(studentTime => 
@@ -536,22 +536,22 @@ export class MemStorage implements IStorage {
               studentTime.replace(/\s+/g, '').includes(tutorTime.replace(/\s+/g, ''))
             )
           );
-
+        
         // If either days match OR times match, consider it a match
         // This is more flexible and yields more potential student-tutor matches
         return dayMatch || timeMatch || timeOverlapMatch;
       });
-
+      
       console.log(`After availability filter: ${students.length} students`);
     }
-
+    
     // Filter by maximum budget/hourly rate if specified
     // The idea is to match students who can afford the tutor's rate
     if (filters.maxBudget) {
       // Since we don't store budget explicitly for students, use a heuristic:
       // Filter out graduate students if rate is very high, etc.
       // This is a simplified approach
-
+      
       if (filters.maxBudget > 2000) {
         // Very high-priced tutors, only match specific programs
         students = students.filter(student => 
@@ -567,10 +567,10 @@ export class MemStorage implements IStorage {
           return semesterNum >= 3; // 3rd semester or higher
         });
       }
-
+      
       console.log(`After budget filter: ${students.length} students`);
     }
-
+    
     return students;
   }
 
@@ -610,7 +610,7 @@ export class MemStorage implements IStorage {
   }>): Promise<(TutorProfile & { user: User })[]> {
     let tutorProfiles = Array.from(this.tutorProfiles.values());
     console.log(`Found ${tutorProfiles.length} total tutor profiles`);
-
+    
     // Join with user data first
     let tutorsWithUserData = tutorProfiles.map(profile => {
       const user = this.users.get(profile.userId);
@@ -620,22 +620,22 @@ export class MemStorage implements IStorage {
       }
       return { ...profile, user };
     }).filter(item => item !== null) as (TutorProfile & { user: User })[];
-
+    
     console.log(`After filtering out missing users: ${tutorsWithUserData.length} tutor profiles`);
-
+    
     // Apply filters on the combined data
     if (filters.subjects && filters.subjects !== "All Subjects") {
       // Split the comma-separated subjects
       const studentSubjectsArray = filters.subjects.split(',')
         .map(subject => subject.trim().toLowerCase())
         .filter(subject => subject.length > 0);
-
+      
       console.log(`Looking for tutor profiles matching subjects: ${JSON.stringify(studentSubjectsArray)}`);
-
+      
       if (studentSubjectsArray.length > 0) {
         tutorsWithUserData = tutorsWithUserData.filter(profile => {
           const tutorSubjects = profile.subjects.map(subject => subject.toLowerCase());
-
+          
           // Check if any of the tutor subjects matches (or contains) any of the student subjects
           return studentSubjectsArray.some(studentSubject => 
             tutorSubjects.some(tutorSubject => 
@@ -648,35 +648,35 @@ export class MemStorage implements IStorage {
       }
       console.log(`After subjects filter: ${tutorsWithUserData.length} tutor profiles`);
     }
-
+    
     if (filters.program && filters.program !== "All Programs") {
       tutorsWithUserData = tutorsWithUserData.filter(profile => 
         profile.user.program === filters.program
       );
       console.log(`After program filter: ${tutorsWithUserData.length} tutor profiles`);
     }
-
+    
     if (filters.semester && filters.semester !== "All Semesters") {
       tutorsWithUserData = tutorsWithUserData.filter(profile => 
         profile.user.semester === filters.semester
       );
       console.log(`After semester filter: ${tutorsWithUserData.length} tutor profiles`);
     }
-
+    
     if (filters.maxRate) {
       tutorsWithUserData = tutorsWithUserData.filter(profile => 
         profile.hourlyRate <= filters.maxRate
       );
       console.log(`After maxRate filter: ${tutorsWithUserData.length} tutor profiles`);
     }
-
+    
     if (filters.isAvailableNow) {
       tutorsWithUserData = tutorsWithUserData.filter(profile => 
         profile.isAvailableNow
       );
       console.log(`After isAvailableNow filter: ${tutorsWithUserData.length} tutor profiles`);
     }
-
+    
     return tutorsWithUserData;
   }
 
@@ -738,7 +738,7 @@ export class MemStorage implements IStorage {
     const id = this.reviewId++;
     const newReview = { ...review, id, createdAt: new Date() };
     this.reviews.set(id, newReview);
-
+    
     // Update tutor's rating
     const tutorProfile = await this.getTutorProfileByUserId(review.tutorId);
     if (tutorProfile) {
@@ -746,13 +746,13 @@ export class MemStorage implements IStorage {
       const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0) + review.rating;
       const newReviewCount = reviews.length + 1;
       const newRating = Math.round(totalRating / newReviewCount * 10) / 10;
-
+      
       await this.updateTutorProfile(tutorProfile.id, {
         rating: newRating,
         reviewCount: newReviewCount
       });
     }
-
+    
     return newReview;
   }
 
@@ -777,21 +777,21 @@ export class MemStorage implements IStorage {
       (conversation) => 
         conversation.participantOneId === userId || conversation.participantTwoId === userId
     );
-
+    
     return Promise.all(userConversations.map(async (conversation) => {
       const otherParticipantId = conversation.participantOneId === userId 
         ? conversation.participantTwoId 
         : conversation.participantOneId;
-
+      
       const otherParticipant = this.users.get(otherParticipantId);
       if (!otherParticipant) throw new Error(`User not found for conversation ${conversation.id}`);
-
+      
       // Get the last message
       const conversationMessages = await this.getMessagesByConversation(conversation.id);
       const lastMessage = conversationMessages.length > 0 
         ? conversationMessages.sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime())[0]
         : undefined;
-
+      
       return {
         ...conversation,
         otherParticipant,
@@ -829,7 +829,7 @@ export class MemStorage implements IStorage {
     const now = new Date();
     const newMessage = { ...message, id, sentAt: now };
     this.messages.set(id, newMessage);
-
+    
     // Update last message time in conversation
     const conversation = await this.getConversation(message.conversationId);
     if (conversation) {
@@ -839,7 +839,7 @@ export class MemStorage implements IStorage {
       };
       this.conversations.set(conversation.id, updatedConversation);
     }
-
+    
     return newMessage;
   }
 
@@ -866,7 +866,7 @@ export class MemStorage implements IStorage {
   async createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod> {
     const id = this.paymentMethodId++;
     const newPaymentMethod = { ...paymentMethod, id, createdAt: new Date() };
-
+    
     // If this is set as default, unset any other default payment methods for this user
     if (paymentMethod.isDefault) {
       for (const [paymentId, payment] of this.paymentMethods.entries()) {
@@ -875,7 +875,7 @@ export class MemStorage implements IStorage {
         }
       }
     }
-
+    
     this.paymentMethods.set(id, newPaymentMethod);
     return newPaymentMethod;
   }
@@ -887,7 +887,7 @@ export class MemStorage implements IStorage {
         this.paymentMethods.set(id, { ...payment, isDefault: false });
       }
     }
-
+    
     // Set the specified payment method as default
     const paymentMethod = this.paymentMethods.get(paymentMethodId);
     if (paymentMethod && paymentMethod.userId === userId) {
