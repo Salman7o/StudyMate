@@ -469,7 +469,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionId: result.data.sessionId,
         reviewerId: req.user.id!,
         targetId: user.role === 'student' ? session.tutorId : session.studentId,
-        rating: result.data.rating || 0, // Default to 0 if not provided
+        rating: result.data.rating,
         comment: result.data.comment,
         reviewerRole: user.role,
         isPublic: true
