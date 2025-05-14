@@ -17,7 +17,6 @@ interface SessionCardProps {
     startTime: string;
     duration: number;
     status: "pending" | "confirmed" | "completed" | "cancelled";
-    createdBy: number; // Assuming this is the user ID who created the session
     tutor?: {
       id: number;
       fullName: string;
@@ -36,13 +35,13 @@ export function SessionCard({ session }: SessionCardProps) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
-
+  
   const formattedDate = new Date(session.date).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
-
+  
   // Convert 24-hour format to 12-hour format
   const formattedStartTime = new Date(`2000-01-01T${session.startTime}`).toLocaleTimeString(
     "en-US",
@@ -52,7 +51,7 @@ export function SessionCard({ session }: SessionCardProps) {
       hour12: true,
     }
   );
-
+  
   // Calculate end time
   const startDate = new Date(`2000-01-01T${session.startTime}`);
   startDate.setMinutes(startDate.getMinutes() + session.duration);
@@ -63,19 +62,7 @@ export function SessionCard({ session }: SessionCardProps) {
   });
 
   const isUserTutor = user?.id === session.tutorId;
-  const { status, createdBy } = session;
-
-  // Determine if user is the creator of the booking
-  const isCreator = user?.id === createdBy;
-
-  // For pending sessions, show different actions based on who created the booking
-  const showConfirmDecline = status === 'pending' && !isCreator;
-  const showCancel = status === 'pending' && isCreator;
-
-  // For other statuses
-  const canCancel = status === 'confirmed';
-
-
+  
   const getBadgeVariant = (status: string) => {
     switch (status) {
       case "pending":
@@ -91,16 +78,16 @@ export function SessionCard({ session }: SessionCardProps) {
     }
   };
 
-  const handleStatusUpdate = async (newStatus: "confirmed" | "completed" | "cancelled" | "declined") => {
+  const handleUpdateStatus = async (newStatus: "confirmed" | "completed" | "cancelled") => {
     try {
       setIsLoading(true);
       await apiRequest("PUT", `/api/sessions/${session.id}/status`, { status: newStatus });
-
+      
       toast({
         title: "Session updated",
         description: `Session has been ${newStatus} successfully`,
       });
-
+      
       // Refresh sessions data
       queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
     } catch (error) {
@@ -115,10 +102,6 @@ export function SessionCard({ session }: SessionCardProps) {
     }
   };
 
-  const handleConfirm = async () => {
-    await handleStatusUpdate("confirmed");
-  };
-
   const getActionButtons = () => {
     if (isUserTutor) {
       // Tutor actions
@@ -126,21 +109,21 @@ export function SessionCard({ session }: SessionCardProps) {
         case "pending":
           return (
             <>
-             {showConfirmDecline && (
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleConfirm} disabled={isLoading}>
-                    Confirm
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleStatusUpdate('declined')} disabled={isLoading}>
-                    Decline
-                  </Button>
-                </div>
-              )}
-              {showCancel && (
-                <Button size="sm" variant="destructive" onClick={() => handleStatusUpdate('cancelled')} disabled={isLoading}>
-                  Cancel
-                </Button>
-              )}
+              <Button 
+                size="sm" 
+                onClick={() => handleUpdateStatus("confirmed")}
+                disabled={isLoading}
+              >
+                Confirm
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleUpdateStatus("cancelled")}
+                disabled={isLoading}
+              >
+                Decline
+              </Button>
             </>
           );
         case "confirmed":
@@ -148,7 +131,7 @@ export function SessionCard({ session }: SessionCardProps) {
             <>
               <Button 
                 size="sm" 
-                onClick={() => handleStatusUpdate("completed")}
+                onClick={() => handleUpdateStatus("completed")}
                 disabled={isLoading}
               >
                 Mark Complete
@@ -156,7 +139,7 @@ export function SessionCard({ session }: SessionCardProps) {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => handleStatusUpdate("cancelled")}
+                onClick={() => handleUpdateStatus("cancelled")}
                 disabled={isLoading}
               >
                 Cancel
@@ -181,30 +164,21 @@ export function SessionCard({ session }: SessionCardProps) {
       switch (session.status) {
         case "pending":
           return (
-            <>
-              {showConfirmDecline && (
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleConfirm} disabled={isLoading}>
-                    Confirm
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleStatusUpdate('declined')} disabled={isLoading}>
-                    Decline
-                  </Button>
-                </div>
-              )}
-              {showCancel && (
-                <Button size="sm" variant="destructive" onClick={() => handleStatusUpdate('cancelled')} disabled={isLoading}>
-                  Cancel
-                </Button>
-              )}
-            </>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleUpdateStatus("cancelled")}
+              disabled={isLoading}
+            >
+              Cancel Request
+            </Button>
           );
         case "confirmed":
           return (
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => handleStatusUpdate("cancelled")}
+              onClick={() => handleUpdateStatus("cancelled")}
               disabled={isLoading}
             >
               Cancel
