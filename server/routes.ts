@@ -469,10 +469,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionId: result.data.sessionId,
         reviewerId: req.user.id!,
         targetId: user.role === 'student' ? session.tutorId : session.studentId,
-        rating: result.data.rating,
+        rating: user.role === 'student' ? result.data.rating : null,
         comment: result.data.comment,
         reviewerRole: user.role,
-        isPublic: true
+        isPublic: user.role === 'student'
       };
 
       const review = await storage.createReview(reviewData);
