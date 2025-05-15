@@ -1,0 +1,236 @@
+Perfect — since you're okay with 15–16 slides and want a more **detailed and impactful pitch deck**, here's a **refined and enriched version** of your *Study Mate* presentation. I’ve expanded content depth, added storytelling touches, and kept the **red & black aesthetic** inspired by your PDF reference.
+
+---
+
+## 🔥 **STUDY MATE – DETAILED PITCH DECK OUTLINE (15 Slides)**
+
+---
+
+### **Slide 1: Cover Slide – Bold & Powerful**
+
+🟥 **Title:** STUDY MATE
+⬛ *“Your Smart Study Partner – Find, Book, and Learn with the Best”*
+👥 Presented by: Salman, Afnan, Shujja, Saad
+🖼 Background: Red + Black gradient or solid black with a glowing red edge
+🧠 Optional visual: Abstract learning or digital connection graphic
+
+---
+
+### **Slide 2: The Problem (Pain Points)**
+
+🟥 **Title:** WHAT’S BROKEN IN TUTORING?
+
+* ❌ Hard to find trustworthy tutors on short notice
+* ❌ Tutors lack visibility & have no proper marketing tools
+* ❌ Session booking & payment are mostly manual and chaotic
+* ❌ Communication is scattered across WhatsApp, phone, notes
+* ❌ No feedback or reputation tracking
+
+📌 *“If students waste time finding help, they’re already behind.”*
+
+---
+
+### **Slide 3: The Human Side**
+
+🟥 **Title:** WHY WE STARTED STUDY MATE
+
+* Salman couldn’t find a good tutor before a final.
+* Afnan tutored part-time but had no discovery.
+* Friends often asked for “good tutors” on Facebook.
+* Everyone was frustrated with unstructured learning.
+
+👉 *We didn’t just research the problem. We **lived** it.*
+
+---
+
+### **Slide 4: The Solution**
+
+🟥 **Title:** INTRODUCING STUDY MATE
+
+📲 **A mobile-first platform for students to:**
+
+* Find verified tutors with matching subjects, university & semester
+* Book, manage, and pay for sessions in one place
+* Track learning history and progress
+* Rate tutors & give feedback for others
+
+👨‍🏫 Tutors can:
+
+* Create profiles, showcase experience
+* Accept sessions, get rated, build reputation
+* Grow their side hustle, professionally
+
+---
+
+### **Slide 5: Meet “Mate” (AI Matching)**
+
+🟥 **Title:** MEET “MATE” – YOUR AI STUDY COMPANION
+
+🧠 Powered by smart filters + machine learning:
+
+* 📚 Matches based on subject, university, academic level
+* 🕐 Shows only available time slots
+* 🎯 Personalizes recommendations over time
+* 🔁 Learns from feedback, usage patterns
+
+🧑‍🎓 *Smart suggestions, not just search results.*
+
+---
+
+### **Slide 6: Market Opportunity (TAM / SAM / SOM)**
+
+🟥 **Title:** MARKET POTENTIAL
+
+**TAM**: \~30M students & tutors in Pakistan
+**SAM**: \~10M urban students with smartphones
+**SOM**: 100k active users in 3 years
+
+🧠 *Gen Z & millennials demand convenience, speed, and credibility in learning.*
+
+🎯 *First-mover advantage in localized tutor matching*
+
+---
+
+### **Slide 7: Why Now?**
+
+🟥 **Title:** WHY THIS IS THE RIGHT TIME
+
+📈 **EdTech is exploding in Pakistan:**
+
+* 67% of students use smartphones to learn
+* Post-COVID education is hybrid, tech-driven
+* Gen Z expects on-demand help, not fixed schedules
+
+💡 *Private tuitions are still a \$1B+ informal market in Pakistan.*
+
+---
+
+### **Slide 8: Product Features**
+
+🟥 **Title:** WHAT MAKES STUDY MATE STAND OUT?
+
+✅ Smart tutor-student matching
+✅ Profile-based booking system
+✅ Simulated payment workflow (test flow now, real later)
+✅ Tutor availability calendar
+✅ Session tracking: pending, upcoming, done
+✅ Ratings & review system
+✅ Inbox-style in-app chat
+✅ User-friendly dashboard
+
+---
+
+### **Slide 9: Business Model**
+
+🟥 **Title:** HOW STUDY MATE MAKES MONEY
+
+💰 **Freemium Model for Tutors:**
+
+* Free profile → Limited visibility
+* Paid plans → Featured placement, review boosting
+
+💼 **Platform Commission:**
+
+* 5–10% per session booked
+
+🏫 **University Partnerships:**
+
+* Department-wise bulk onboarding
+* Sponsored tutor accounts
+
+📢 **Other Streams:**
+
+* Ads (e.g., learning tools)
+* Sponsored tutor listings
+
+---
+
+### **Slide 10: Competitive Landscape**
+
+🟥 **Title:** WHY WE’RE DIFFERENT
+
+| Feature                | Study Mate | Traditional Tuition | FB Groups | Upwork/Fiverr |
+| ---------------------- | ---------- | ------------------- | --------- | ------------- |
+| Smart Matching         | ✅          | ❌                   | ❌         | ❌             |
+| Secure Booking         | ✅          | ❌                   | ❌         | ✅             |
+| Localized Discovery    | ✅          | ✅                   | ✅         | ❌             |
+| Reviews & Tracking     | ✅          | ❌                   | ❌         | ✅             |
+| Real-time Availability | ✅          | ❌                   | ❌         | ❌             |
+
+🎯 *Only Study Mate is built specifically for local academic tutoring.*
+
+---
+
+### **Slide 11: Product Demo**
+
+🟥 **Title:** PROTOTYPE WALKTHROUGH
+
+🖥 Screens to Show (or short demo video):
+
+1. Student onboarding → subject filter → tutor profiles
+2. Book session → see mock payment screen
+3. Tutor accepts → sees session dashboard
+4. Reviews after session
+5. History tracking
+
+*Clean UI. Localized experience. Real feedback built in.*
+
+---
+
+### **Slide 12: Traction So Far**
+
+🟥 **Title:** TRACTION & VALIDATION
+
+📊 MVP live (Web App)
+👨‍💻 50+ early testers
+📬 Feedback loop active
+🏫 2 university groups ready for beta onboarding
+📱 Mobile UI in progress
+🚀 Avg. 4.7 star ratings in closed testing
+
+---
+
+### **Slide 13: Roadmap**
+
+🟥 **Title:** WHERE WE’RE HEADED
+
+📆 **Q2 2025:** Refine beta, implement UI polish
+📆 **Q3 2025:** Official launch + social campaigns
+📆 **Q4 2025:** Scale to 5 universities
+📱 **Q1 2026:** Android/iOS app launch
+🧠 **Q2 2026:** AI tutor auto-recommendation
+📈 **Q3 2026:** Monetization scaling + partnerships
+
+---
+
+### **Slide 14: Meet the Team**
+
+🟥 **Title:** THE FOUNDING TEAM
+
+👨‍💻 **Salman** – Frontend Developer & UI Lead
+🔧 **Afnan** – Backend Developer & System Architect
+📊 **Shujja** – Research & Business Development
+🎨 **Saad** – Product Design & QA
+
+📌 We’re all students or recent grads who’ve faced this pain.
+🧠 We’re building Study Mate *for learners, by learners*.
+
+---
+
+### **Slide 15: Thank You / Q\&A**
+
+🟥 **Title (centered):** LET’S EMPOWER EDUCATION TOGETHER
+
+💬 *We’d love your questions and insights.*
+📧 Contact: \[email / LinkedIn / Instagram]
+📍 Karachi, Pakistan
+
+---
+
+Would you like me to now:
+
+* Provide this as a downloadable **editable Google Slides template**?
+* Help design a **pitch deck cover image or logo**?
+* Write **speaker notes** for each slide?
+
+Let me know how you'd like to proceed.
