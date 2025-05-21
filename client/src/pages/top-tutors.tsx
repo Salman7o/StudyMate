@@ -41,6 +41,7 @@ export default function TopTutors() {
   };
 
   const viewProfile = (tutorId: number) => {
+    console.log(`Navigating to tutor profile: /tutors/${tutorId}`);
     setLocation(`/tutors/${tutorId}`);
   };
   

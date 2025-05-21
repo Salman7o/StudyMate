@@ -79,7 +79,7 @@ export function TutorCard({ tutor }: TutorCardProps) {
   };
 
   const handleViewProfile = () => {
-    setLocation(`/tutor-profile/${tutor.user.id}`);
+    setLocation(`/tutors/${tutor.user.id}`);
   };
 
   // Convert rating from 0-50 scale to 0-5 scale
