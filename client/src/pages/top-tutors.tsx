@@ -41,12 +41,12 @@ export default function TopTutors() {
   };
 
   const viewProfile = (tutorId: number) => {
-    console.log(`Navigating to tutor profile: /tutor-profile/${tutorId}`);
-    setLocation(`/tutor-profile/${tutorId}`);
+    console.log(`Navigating to tutor profile: /tutors/${tutorId}`);
+    setLocation(`/tutors/${tutorId}`);
   };
   
   const bookSession = (tutorId: number) => {
-    setLocation(`/tutor-profile/${tutorId}?action=book`);
+    setLocation(`/tutors/${tutorId}?action=book`);
   };
   
   const messageUser = (tutorId: number) => {
