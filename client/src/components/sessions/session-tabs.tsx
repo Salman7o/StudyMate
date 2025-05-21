@@ -49,7 +49,8 @@ export function SessionTabs({ sessions }: SessionTabsProps) {
         return sessions.filter(
           (session) => 
             session.status === "completed" || 
-            (session.status === "confirmed" && new Date(session.date) < now)
+            session.status === "cancelled" || 
+            (new Date(session.date) < now && session.status !== "pending")
         );
       default:
         return [];

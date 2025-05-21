@@ -59,15 +59,22 @@ export function ReviewModal({ isOpen, onClose, session, isStudent }: ReviewModal
           tutorId: session.tutorId,
           studentId: session.studentId,
           sessionId: session.id,
-          rating: rating * 10, // Convert to 0-50 scale for backend
+          rating: rating, // Keep the 1-5 scale for consistency
           comment,
         });
+        
+        // Also update tutor profile with the new rating
+        queryClient.invalidateQueries({ queryKey: [`/api/tutors/${session.tutorId}`] });
       } else {
-        // Tutor only provides feedback
+        // Tutor provides feedback
         await apiRequest("POST", "/api/sessions/feedback", {
           sessionId: session.id,
+          studentId: session.studentId,
           comment,
         });
+        
+        // Update student profile to show the feedback
+        queryClient.invalidateQueries({ queryKey: [`/api/students/${session.studentId}`] });
       }
 
       toast({

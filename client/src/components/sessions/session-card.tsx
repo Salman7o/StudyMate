@@ -83,13 +83,31 @@ export function SessionCard({ session }: SessionCardProps) {
       setIsLoading(true);
       await apiRequest("PUT", `/api/sessions/${session.id}/status`, { status: newStatus });
       
+      let successMessage = "";
+      
+      // Show appropriate message based on the new status
+      if (newStatus === "confirmed") {
+        successMessage = "Session has been confirmed and moved to Upcoming Sessions";
+      } else if (newStatus === "completed") {
+        successMessage = "Session has been marked as complete and moved to Past Sessions";
+      } else if (newStatus === "cancelled") {
+        successMessage = "Session has been cancelled";
+      }
+      
       toast({
         title: "Session updated",
-        description: `Session has been ${newStatus} successfully`,
+        description: successMessage,
       });
       
       // Refresh sessions data
       queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
+      
+      // If session is completed, show review modal after a short delay for better UX
+      if (newStatus === "completed") {
+        setTimeout(() => {
+          setShowReviewModal(true);
+        }, 1000);
+      }
     } catch (error) {
       console.error("Failed to update session:", error);
       toast({

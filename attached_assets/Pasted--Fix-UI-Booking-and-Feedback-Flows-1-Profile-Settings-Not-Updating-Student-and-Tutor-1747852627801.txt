@@ -1,0 +1,42 @@
+ Fix UI, Booking, and Feedback Flows**
+
+1. **Profile Settings Not Updating**
+
+   * Student and Tutor profile settings are not updating after signup. Please fix the update functionality for both roles.
+
+2. **Unified UI for Find Pages**
+
+   * The **Find Tutors** and **Find Students** pages currently have different UIs. Make both interfaces consistent and visually aligned.
+
+3. **View Profile Button Not Working (Tutors)**
+
+   * In the **Find Tutors** page, the **View Profile** button is not navigating to the tutor’s profile. This functionality should work exactly like it does in the Find Students page.
+
+4. **Top Tutors Page UI Issue**
+
+   * The **Top Tutors** page in the student portal needs a UI fix to match the rest of the application’s styling.
+
+5. **Booking Not Working from Tutor Side**
+
+   * Tutors are currently unable to book students. Please fix the booking functionality from the tutor portal.
+
+6. **Wrong Flow in Session Status**
+
+   * When students book tutors, the session goes to the tutor’s **Pending Sessions**.
+   * However, when the tutor clicks **Confirm**, the session wrongly moves to **Past Sessions** instead of **Upcoming Sessions**.
+   * The session should only move to **Past** after it’s marked **Complete** from the **Upcoming** section. Fix this flow.
+
+7. **Feedback Logic Not Working**
+
+   * When a tutor marks a session as **Complete** from **Upcoming**, it should appear in **Past Sessions**.
+   * The **Provide Feedback** button is not functional — make sure tutors can leave feedback for students.
+   * That feedback should appear on the **student’s profile**.
+   * When a **student leaves a rating and review** for a tutor, it should update on the **tutor’s profile**.
+
+8. **Rating Should Reflect on Top Tutors**
+
+   * The tutor’s **average rating** from students should display on the **Top Tutors** page.
+
+9. **Button Styling and Alignment**
+
+   * On both the **Find Students** and **Find Tutors** pages, the three buttons (**Book Session, View Profile, Message**) should be aligned properly and use the **same color scheme** for consistency.
