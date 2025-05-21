@@ -115,7 +115,7 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
       // Simulate a short delay before API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log("Tutor booking with student ID:", student.id, "and tutor ID:", user.id);
+      console.log("Tutor booking with student ID:", student.id, "and tutor ID:", user.id, "- Starting booking process");
 
       // Format session data to exactly match the schema requirements
       const sessionData = {
@@ -132,9 +132,22 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
       };
 
       // Create the session
-      const response = await apiRequest("/api/sessions", "POST", sessionData);
-
-      console.log("Session created:", response);
+      console.log("Submitting booking data:", sessionData);
+      const response = await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sessionData),
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error("Error from server:", errorData);
+        throw new Error(errorData?.message || "Failed to create session");
+      }
+      
+      const sessionResponse = await response.json();
+      console.log("Session created successfully:", sessionResponse);
       
       // Set booking success and update UI
       setIsBookingSuccess(true);
@@ -159,6 +172,7 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
       
     } catch (error) {
       console.error("Failed to book session:", error);
+      setIsPaymentSuccess(false);
       toast({
         title: "Booking Failed",
         description: "There was an error booking your session. Please try again.",
