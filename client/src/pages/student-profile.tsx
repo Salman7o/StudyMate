@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { StudentBookingModal } from "@/components/booking/student-booking-modal";
+import { TutorBookingModal } from "@/components/booking/tutor-booking-modal";
 
 interface Student {
   id: number;
@@ -259,14 +260,20 @@ export default function StudentProfile() {
         </Card>
       )}
 
-      {/* Student Booking Modal */}
-      {student && (
+      {/* Booking Modal - different for students and tutors */}
+      {student && user?.role === 'tutor' ? (
+        <TutorBookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => setIsBookingModalOpen(false)}
+          student={student}
+        />
+      ) : student && user?.role === 'student' ? (
         <StudentBookingModal
           isOpen={isBookingModalOpen}
           onClose={() => setIsBookingModalOpen(false)}
           student={student}
         />
-      )}
+      ) : null}
     </div>
   );
 }

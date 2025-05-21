@@ -288,9 +288,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: result.error });
       }
 
-      // Make sure the student ID matches the current user if student is booking
-      if (result.data.studentId !== req.user.id) {
-        return res.status(403).json({ message: "You can only book sessions for yourself" });
+      // Check user roles and permissions for booking
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Allow students to book tutors (student ID must match current user)
+      // Allow tutors to book students (tutor ID must match current user)
+      if (user.role === 'student' && result.data.studentId !== req.user.id) {
+        return res.status(403).json({ message: "Students can only book sessions for themselves" });
+      } else if (user.role === 'tutor' && result.data.tutorId !== req.user.id) {
+        return res.status(403).json({ message: "Tutors can only book sessions for themselves" });
       }
 
       const session = await storage.createSession(result.data);

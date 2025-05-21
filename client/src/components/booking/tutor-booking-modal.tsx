@@ -132,10 +132,7 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
       };
 
       // Create the session
-      const response = await apiRequest("/api/sessions", {
-        method: "POST",
-        data: sessionData
-      });
+      const response = await apiRequest("/api/sessions", "POST", sessionData);
 
       console.log("Session created:", response);
       
