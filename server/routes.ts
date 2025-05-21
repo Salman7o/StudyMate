@@ -301,9 +301,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requestedTutorId: result.data.tutorId
       });
       
-      // Skip permission checks temporarily to allow bidirectional booking for testing
-      // We'll log and continue for now, then add proper checks later
-      console.log("Allowing session booking regardless of role:", user.role);
+      // Allow both user types to book sessions with appropriate validation
+      if (user.role === 'student') {
+        if (result.data.studentId !== user.id) {
+          console.log("Permission denied: Student tried to book for another student");
+          return res.status(403).json({ message: "As a student, you can only book sessions for yourself" });
+        }
+      } else if (user.role === 'tutor') {
+        if (result.data.tutorId !== user.id) {
+          console.log("Permission denied: Tutor tried to book for another tutor");
+          return res.status(403).json({ message: "As a tutor, you can only create sessions where you are the tutor" });
+        }
+      }
 
       const session = await storage.createSession(result.data);
       console.log("Session created successfully:", session);
