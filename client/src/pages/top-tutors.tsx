@@ -83,215 +83,135 @@ export default function TopTutors() {
   const currentTutor = topTutors[currentIndex];
   
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Top-Rated Tutors</CardTitle>
-          <CardDescription>
-            Browse our highest-rated tutors based on student reviews and ratings
+    <div>
+      <Card className="overflow-hidden bg-gradient-to-br from-black to-red-800 border-none">
+        <CardHeader className="text-center border-b border-gray-800 pb-6">
+          <CardTitle className="text-2xl font-bold text-white">STUDYMATE</CardTitle>
+          <CardDescription className="text-gray-300">
+            Our highest rated tutors based on student reviews
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="bg-muted rounded-lg p-4 mb-4">
-            <p className="text-sm text-muted-foreground">
-              Find the best tutors for your subjects and learning needs. Our top tutors have consistently received excellent feedback from students.
-            </p>
-          </div>
+        
+        <CardContent className="py-10 relative">
+          {/* Previous button */}
+          <button 
+            onClick={goToPrevious}
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black transition-colors z-10"
+            aria-label="Previous tutor"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
           
-          <div className="relative mt-8 overflow-hidden">
-            {/* Previous button */}
-            <button 
-              onClick={goToPrevious}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black transition-colors z-10"
-              aria-label="Previous tutor"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
+          {/* Current tutor */}
+          <div className="flex flex-col items-center justify-center text-center px-8">
+            {currentTutor.user?.profileImage ? (
+              <img 
+                src={currentTutor.user.profileImage} 
+                alt={currentTutor.user.fullName} 
+                className="w-24 h-24 rounded-full mb-4 border-2 border-red-500"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-red-900 text-white flex items-center justify-center mb-4 border-2 border-red-500">
+                <span className="text-xl font-bold">
+                  {currentTutor.user?.fullName.split(" ").map((n: string) => n[0]).join("")}
+                </span>
+              </div>
+            )}
             
-            {/* Current tutor */}
-            <div className="border rounded-lg bg-gradient-to-br from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 p-6 hover:border-primary transition-colors">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center mb-4">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-red-500 to-black text-white flex items-center justify-center mr-3">
-                      <span className="text-lg font-medium">
-                        {currentTutor.user?.fullName
-                          .split(" ")
-                          .map((n: string) => n[0])
-                          .join("")}
+            <h3 className="text-xl font-bold text-white mb-2">{currentTutor.user?.fullName}</h3>
+            
+            <div className="flex items-center justify-center mb-3 text-yellow-400">
+              {Array.from({ length: 5 }).map((_, index) => {
+                const rating = currentTutor.rating / 10;
+                const isFilled = index < Math.floor(rating);
+                const isHalf = !isFilled && index < Math.ceil(rating) && rating % 1 !== 0;
+                
+                return (
+                  <span key={index} className="mx-0.5">
+                    {isFilled ? (
+                      <Star className="h-5 w-5 fill-current" />
+                    ) : isHalf ? (
+                      <span className="relative">
+                        <Star className="h-5 w-5 text-gray-600" />
+                        <span className="absolute top-0 left-0 overflow-hidden w-1/2">
+                          <Star className="h-5 w-5 fill-current" />
+                        </span>
                       </span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-lg">
-                        {currentTutor.user?.fullName}
-                      </h3>
-                      <div className="flex items-center text-sm text-muted-foreground gap-2">
-                        <School className="h-4 w-4" />
-                        <span>{currentTutor.user?.program || "University Program"}</span>
-                      </div>
-                      <div className="mt-1 flex items-center">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className={`h-4 w-4 ${
-                              star <= (currentTutor.rating / 10)
-                                ? "text-yellow-500 fill-current"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          {(currentTutor.rating / 10).toFixed(1)} ({currentTutor.reviewCount} reviews)
-                        </span>
-                      </div>
-                      <div className="mt-2 text-sm">
-                        <span className="font-medium text-green-600 dark:text-green-500">
-                          Rate: Rs. {currentTutor.hourlyRate.toLocaleString()}/hour
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                    ) : (
+                      <Star className="h-5 w-5 text-gray-600" />
+                    )}
+                  </span>
+                );
+              })}
+              <span className="ml-2 text-gray-300 text-sm">{(currentTutor.rating / 10).toFixed(1)} / 5</span>
+            </div>
+            
+            <div className="text-gray-300 mb-6">
+              {currentTutor.reviewCount} {currentTutor.reviewCount === 1 ? 'review' : 'reviews'}
+            </div>
 
-                  <div className="grid gap-4 mb-4">
-                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                      <h4 className="font-medium mb-3 flex items-center gap-2 text-primary">
-                        <Award className="h-5 w-5" />
-                        Top Tutor Profile
-                      </h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <div className="text-sm">
-                            <span className="text-muted-foreground">
-                              Experience:
-                            </span>
-                            <div className="font-medium">
-                              {currentTutor.experience || "Not specified"}
-                            </div>
-                          </div>
-                          <div className="text-sm">
-                            <span className="text-muted-foreground">
-                              Rating:
-                            </span>
-                            <div className="font-medium text-yellow-500">
-                              {(currentTutor.rating / 10).toFixed(1)} / 5 ({currentTutor.reviewCount} reviews)
-                            </div>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="text-sm">
-                            <span className="text-muted-foreground">
-                              Hourly Rate:
-                            </span>
-                            <div className="font-medium text-green-600 dark:text-green-500">
-                              Rs. {currentTutor.hourlyRate.toLocaleString()}/hour
-                            </div>
-                          </div>
-                          <div className="text-sm">
-                            <span className="text-muted-foreground">
-                              Status:
-                            </span>
-                            <div className="font-medium">
-                              {currentTutor.isAvailableNow ? (
-                                <span className="flex items-center text-green-600">
-                                  <span className="h-2 w-2 rounded-full bg-green-600 mr-1"></span>
-                                  Available Now
-                                </span>
-                              ) : (
-                                <span className="flex items-center text-amber-600">
-                                  <span className="h-2 w-2 rounded-full bg-amber-600 mr-1"></span>
-                                  Unavailable
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                        <h4 className="font-medium mb-3 flex items-center gap-2 text-primary">
-                          Subjects
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {currentTutor.subjects?.map((subject: string, index: number) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="px-2 py-1"
-                            >
-                              {subject}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                        <h4 className="font-medium mb-3 flex items-center gap-2 text-primary">
-                          <Clock className="h-5 w-5" />
-                          Availability
-                        </h4>
-                        <p className="text-sm">
-                          {currentTutor.availability || "Check with tutor for availability."}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-start gap-2">
-                    <Button
-                      size="sm"
-                      className="flex items-center bg-gradient-to-r from-red-500 to-black hover:from-red-600 hover:to-gray-900"
-                      onClick={() => messageUser(currentTutor.user.id)}
-                    >
-                      <MessageCircle className="h-4 w-4 mr-1" />
-                      <span>Message</span>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-red-500 hover:bg-red-50 hover:text-red-600"
-                      onClick={() => viewProfile(currentTutor.user.id)}
-                    >
-                      View Profile
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="default"
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={() => bookSession(currentTutor.user.id)}
-                    >
-                      Book Session
-                    </Button>
-                  </div>
-                </div>
+            <div className="bg-red-900/30 text-white p-4 rounded-md mb-4">
+              <h4 className="text-lg font-medium mb-2">Availability</h4>
+              <p className="text-sm text-red-200">
+                {currentTutor.availability || "Contact tutor for availability"}
+              </p>
+            </div>
+            
+            <div className="bg-red-900/30 text-white p-4 rounded-md mb-6">
+              <h4 className="text-lg font-medium mb-2">Expertise</h4>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {currentTutor.subjects.map((subject: string, index: number) => (
+                  <span 
+                    key={index} 
+                    className="bg-red-500/20 border border-red-500/40 text-red-200 rounded-full px-3 py-1 text-sm"
+                  >
+                    {subject}
+                  </span>
+                ))}
               </div>
             </div>
             
-            {/* Next button */}
-            <button 
-              onClick={goToNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black transition-colors z-10"
-              aria-label="Next tutor"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
+            <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-6">
+              <div className="bg-black/50 p-3 rounded-md text-center">
+                <div className="text-gray-400 text-sm mb-1">Experience</div>
+                <div className="text-white">{currentTutor.experience || 'Not specified'}</div>
+              </div>
+              <div className="bg-black/50 p-3 rounded-md text-center">
+                <div className="text-gray-400 text-sm mb-1">Hourly Rate</div>
+                <div className="text-white">Rs. {currentTutor.hourlyRate}/hr</div>
+              </div>
+            </div>
+            
+            <Link href={`/tutors/${currentTutor.user.id}`}>
+              <Button className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900" onClick={() => viewProfile(currentTutor.user.id)}>
+                View Profile
+              </Button>
+            </Link>
           </div>
           
-          {/* Dots navigation */}
-          <div className="flex justify-center py-4 space-x-2">
-            {topTutors.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-                aria-label={`Go to tutor ${index + 1}`}
-              />
-            ))}
-          </div>
+          {/* Next button */}
+          <button 
+            onClick={goToNext}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black transition-colors z-10"
+            aria-label="Next tutor"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
         </CardContent>
+        
+        {/* Dots navigation */}
+        <div className="flex justify-center pb-6 space-x-2">
+          {topTutors.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                index === currentIndex ? 'bg-red-500' : 'bg-gray-600'
+              }`}
+              aria-label={`Go to tutor ${index + 1}`}
+            />
+          ))}
+        </div>
       </Card>
     </div>
   );

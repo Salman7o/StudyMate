@@ -154,19 +154,29 @@ export function TutorCard({ tutor }: TutorCardProps) {
             </div>
 
             <div className="flex items-center justify-between mb-4">
-              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg py-2 px-3">
-                <span className="text-sm font-medium">Status: </span>
-                {tutor.isAvailableNow ? (
-                  <span className="text-green-600 font-medium text-sm inline-flex items-center">
-                    <span className="h-2 w-2 rounded-full bg-green-600 mr-1"></span>
-                    Available Now
-                  </span>
-                ) : (
-                  <span className="text-amber-600 font-medium text-sm inline-flex items-center">
-                    <span className="h-2 w-2 rounded-full bg-amber-600 mr-1"></span>
-                    Unavailable
-                  </span>
-                )}
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg py-2 px-3 w-full">
+                <div className="flex justify-between items-center w-full">
+                  <div>
+                    <span className="text-sm font-medium">Status: </span>
+                    {tutor.isAvailableNow ? (
+                      <span className="text-green-600 font-medium text-sm inline-flex items-center">
+                        <span className="h-2 w-2 rounded-full bg-green-600 mr-1"></span>
+                        Available Now
+                      </span>
+                    ) : (
+                      <span className="text-amber-600 font-medium text-sm inline-flex items-center">
+                        <span className="h-2 w-2 rounded-full bg-amber-600 mr-1"></span>
+                        Unavailable
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">Availability: </span>
+                    <span className="text-sm text-muted-foreground">
+                      {tutor.availability || tutor.user.availability || "Contact tutor for availability"}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
