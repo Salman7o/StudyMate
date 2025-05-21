@@ -41,6 +41,7 @@ function App() {
                   <Route path="/student-dashboard" component={StudentDashboard} />
                   <Route path="/tutor-dashboard" component={TutorDashboard} />
                   <Route path="/tutor/:id" component={TutorProfilePage} />
+                  <Route path="/tutor-profile/:id" component={TutorProfilePage} />
                   <Route path="/top-tutors" component={TopTutors} />
                   <Route path="/students/:id" component={StudentProfile} />
                   <Route path="/tutors/:id" component={TutorProfilePage} />
