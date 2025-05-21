@@ -41,12 +41,12 @@ export default function TopTutors() {
   };
 
   const viewProfile = (tutorId: number) => {
-    console.log(`Navigating to tutor profile: /tutors/${tutorId}`);
-    setLocation(`/tutors/${tutorId}`);
+    console.log(`Navigating to tutor profile: /tutor-profile/${tutorId}`);
+    setLocation(`/tutor-profile/${tutorId}`);
   };
   
   const bookSession = (tutorId: number) => {
-    setLocation(`/tutors/${tutorId}?action=book`);
+    setLocation(`/tutor-profile/${tutorId}?action=book`);
   };
   
   const messageUser = (tutorId: number) => {
@@ -182,11 +182,12 @@ export default function TopTutors() {
               </div>
             </div>
             
-            <Link href={`/tutors/${currentTutor.user.id}`}>
-              <Button className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900" onClick={() => viewProfile(currentTutor.user.id)}>
-                View Profile
-              </Button>
-            </Link>
+            <Button 
+              className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900" 
+              onClick={() => viewProfile(currentTutor.user.id)}
+            >
+              View Profile
+            </Button>
           </div>
           
           {/* Next button */}
