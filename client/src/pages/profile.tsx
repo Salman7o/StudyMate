@@ -44,6 +44,7 @@ export default function Profile() {
     }
   });
   
+  // Initialize tutor form data with an effect to ensure it updates when profile data loads
   const [tutorFormData, setTutorFormData] = useState({
     subjects: tutorProfile?.subjects || [],
     hourlyRate: tutorProfile?.hourlyRate || 0,
@@ -51,6 +52,19 @@ export default function Profile() {
     availability: tutorProfile?.availability || "",
     isAvailableNow: tutorProfile?.isAvailableNow || false,
   });
+  
+  // Update tutorFormData when tutorProfile changes/loads
+  useEffect(() => {
+    if (tutorProfile) {
+      setTutorFormData({
+        subjects: tutorProfile.subjects || [],
+        hourlyRate: tutorProfile.hourlyRate || 0,
+        experience: tutorProfile.experience || "",
+        availability: tutorProfile.availability || "",
+        isAvailableNow: tutorProfile.isAvailableNow || false,
+      });
+    }
+  }, [tutorProfile]);
 
   // Get payment methods
   const { data: paymentMethods = [] } = useQuery({

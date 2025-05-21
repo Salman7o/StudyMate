@@ -38,7 +38,8 @@ export function SessionTabs({ sessions }: SessionTabsProps) {
       case "upcoming":
         return sessions.filter(
           (session) => 
-            (session.status === "confirmed") && 
+            // Show confirmed sessions with future dates in "Upcoming"
+            (session.status === "confirmed" || session.status === "completed") && 
             new Date(session.date) >= now
         );
       case "pending":
@@ -48,7 +49,8 @@ export function SessionTabs({ sessions }: SessionTabsProps) {
       case "past":
         return sessions.filter(
           (session) => 
-            session.status === "completed" || 
+            // Only show completed sessions in Past if their date has passed
+            (session.status === "completed" && new Date(session.date) < now) || 
             session.status === "cancelled" || 
             (new Date(session.date) < now && session.status === "confirmed")
         );
