@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-context";
 import { Card, CardContent } from "@/components/ui/card";
@@ -276,7 +276,76 @@ export default function Profile() {
                   />
                 </div>
               </div>
-              <div className="flex justify-end space-x-4">
+              {/* Tutor-specific fields */}
+              {user?.role === 'tutor' && (
+                <div className="space-y-6 mt-6 border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Tutor Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="hourlyRate">Hourly Rate (Rs.)</Label>
+                      <Input
+                        id="hourlyRate"
+                        name="hourlyRate"
+                        type="number"
+                        value={tutorFormData.hourlyRate}
+                        onChange={handleTutorInputChange}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="isAvailableNow" className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="isAvailableNow"
+                          name="isAvailableNow"
+                          checked={tutorFormData.isAvailableNow}
+                          onChange={(e) => 
+                            setTutorFormData(prev => ({ 
+                              ...prev, 
+                              isAvailableNow: e.target.checked 
+                            }))
+                          }
+                          className="mr-2"
+                        />
+                        Available Now
+                      </Label>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="subjects">Subjects (comma-separated)</Label>
+                      <Input
+                        id="subjects"
+                        name="subjects"
+                        value={tutorFormData.subjects.join(', ')}
+                        onChange={handleTutorInputChange}
+                        placeholder="e.g. Calculus, Physics, Programming"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="availability">Availability</Label>
+                      <Input
+                        id="availability"
+                        name="availability"
+                        value={tutorFormData.availability}
+                        onChange={handleTutorInputChange}
+                        placeholder="e.g. Mon-Fri, 2-6pm"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="experience">Experience</Label>
+                      <Textarea
+                        id="experience"
+                        name="experience"
+                        value={tutorFormData.experience}
+                        onChange={handleTutorInputChange}
+                        rows={3}
+                        placeholder="Describe your teaching experience and qualifications"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-4 mt-6">
                 <Button type="submit">Save Changes</Button>
                 <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
                   Cancel
