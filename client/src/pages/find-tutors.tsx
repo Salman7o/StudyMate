@@ -81,8 +81,8 @@ export default function FindTutors() {
   };
 
   const handleViewProfile = (tutorUserId: number) => {
-    console.log(`Navigating to tutor profile: /tutors/${tutorUserId}`);
-    setLocation(`/tutors/${tutorUserId}`);
+    console.log(`Navigating to tutor profile: /tutor-profile/${tutorUserId}`);
+    setLocation(`/tutor-profile/${tutorUserId}`);
   };
 
   // If not authenticated or user is a tutor, don't render the page content
@@ -230,6 +230,14 @@ export default function FindTutors() {
                                       Unavailable
                                     </span>
                                   )}
+                                </div>
+                              </div>
+                              <div className="text-sm mt-2">
+                                <span className="text-muted-foreground">
+                                  Availability:
+                                </span>
+                                <div className="font-medium">
+                                  {tutor.availability || "Contact tutor for schedule"}
                                 </div>
                               </div>
                             </div>
