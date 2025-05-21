@@ -81,7 +81,9 @@ export function SessionCard({ session }: SessionCardProps) {
   const handleUpdateStatus = async (newStatus: "confirmed" | "completed" | "cancelled") => {
     try {
       setIsLoading(true);
-      await apiRequest("PUT", `/api/sessions/${session.id}/status`, { status: newStatus });
+      console.log(`Updating session ${session.id} from ${session.status} to ${newStatus}`);
+      const response = await apiRequest("PUT", `/api/sessions/${session.id}/status`, { status: newStatus });
+      console.log("Session update response:", response);
       
       let successMessage = "";
       

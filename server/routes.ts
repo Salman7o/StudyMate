@@ -491,10 +491,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Tutor feedback for sessions (no rating, just comments)
   app.post("/api/sessions/feedback", isAuthenticated, isAuthorized('tutor'), async (req, res) => {
     try {
-      const { sessionId, comment } = req.body;
+      const { sessionId, studentId, comment } = req.body;
+      console.log(`Tutor providing feedback for session ${sessionId}, student ${studentId}`);
 
-      if (!sessionId || !comment) {
-        return res.status(400).json({ message: "Session ID and comment are required" });
+      if (!sessionId || !studentId || !comment) {
+        return res.status(400).json({ message: "Session ID, student ID, and comment are required" });
       }
 
       // Verify that the session exists and is completed
@@ -508,16 +509,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if the user was the tutor for this session
-      if (session.tutorId !== req.user.id) {
-        return res.status(403).json({ message: "You can only provide feedback for sessions you participated in" });
+      const userId = req.user?.id;
+      if (!userId || session.tutorId !== userId) {
+        return res.status(403).json({ message: "You can only provide feedback for sessions you participated in as a tutor" });
       }
 
-      // For the prototype, we'll just return success - in a real app, this would save to the database
+      // Get the student to update their profile with the feedback
+      const student = await storage.getUser(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Save feedback to the student's profile (in a real app)
+      console.log(`Saving tutor feedback from tutor ${userId} for student ${studentId} on session ${sessionId}`);
+      
+      // For now just return success to simulate saving the feedback
       return res.status(200).json({ 
         success: true, 
         message: "Feedback submitted successfully",
         sessionId,
-        tutorId: req.user.id,
+        tutorId: userId,
+        studentId,
         comment
       });
     } catch (error) {
