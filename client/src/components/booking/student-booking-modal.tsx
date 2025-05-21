@@ -112,12 +112,30 @@ export function StudentBookingModal({ isOpen, onClose, student }: StudentBooking
 
     try {
       setIsSubmitting(true);
+      
+      // Show payment processing simulation
+      toast({
+        title: "Processing Payment...",
+        description: "Please wait while we process your payment.",
+      });
 
+      // Simulate payment processing delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       // Show payment success immediately (simulated payment)
       setIsPaymentSuccess(true);
+      
+      // Show payment success toast
+      toast({
+        title: "Payment Successful!",
+        description: "Your payment has been processed successfully.",
+        variant: "default",
+      });
 
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Simulate a short delay before API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log("Student booking with tutor ID:", user.id, "and student ID:", student.id);
 
       // Format session data to exactly match the schema requirements
       const sessionData = {
@@ -132,8 +150,12 @@ export function StudentBookingModal({ isOpen, onClose, student }: StudentBooking
         description: description || "",
         status: "pending", // Start as pending for proper workflow simulation
       };
-
-      await apiRequest("POST", "/api/sessions", sessionData);
+      
+      console.log("Submitting booking data:", sessionData);
+      
+      const response = await apiRequest("POST", "/api/sessions", sessionData);
+      const result = await response.json();
+      console.log("Booking result:", result);
 
       // Show payment success message
       toast({

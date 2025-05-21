@@ -405,14 +405,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You are not authorized to update this session" });
       }
 
-      // Handle different status updates based on user role
-      if (status === 'confirmed' || status === 'declined') {
-        if (userId === session.tutorId) {
-          // Allow tutors to confirm/decline
-          const updatedSession = await storage.updateSessionStatus(sessionId, status);
-          return res.json(updatedSession);
+      // Log the status change request
+      console.log(`Session status change request: Session ${sessionId} from "${session.status}" to "${status}" by user ${userId}`);
+      
+      // Handle different status updates based on user role and current status
+      if (status === 'confirmed') {
+        if (userId !== session.tutorId) {
+          return res.status(403).json({ message: "Only tutors can confirm sessions" });
         }
-        return res.status(403).json({ message: "Only tutors can confirm or decline sessions" });
+        
+        if (session.status !== 'pending') {
+          return res.status(400).json({ message: "Only pending sessions can be confirmed" });
+        }
+        
+        console.log(`Tutor ${userId} confirming session ${sessionId}`);
+      } else if (status === 'completed') {
+        if (userId !== session.tutorId) {
+          return res.status(403).json({ message: "Only tutors can mark sessions as completed" });
+        }
+        
+        if (session.status !== 'confirmed') {
+          return res.status(400).json({ message: "Only confirmed sessions can be marked as completed" });
+        }
+        
+        console.log(`Tutor ${userId} marking session ${sessionId} as completed`);
+      } else if (status === 'cancelled') {
+        // Both students and tutors can cancel sessions
+        console.log(`User ${userId} cancelling session ${sessionId}`);
       }
 
       if (status === 'cancelled') {
