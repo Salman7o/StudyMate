@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Search, Clock, School, BookOpen, Star } from "lucide-react";
+import { MessageCircle, Search, BookOpen, School, Building, Clock } from "lucide-react";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -108,219 +108,144 @@ export default function FindTutors() {
         </CardContent>
       </Card>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Matched Tutors</CardTitle>
-          <CardDescription>
-            {isLoading
-              ? "Loading your matched tutors..."
-              : `Found ${tutors.length} tutors matching your criteria`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-4">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <p className="mt-4 text-muted-foreground">Loading tutors...</p>
-            </div>
-          ) : tutors.length === 0 ? (
-            <div className="text-center py-8">
-              <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium">No tutors found</h3>
-              <p className="text-sm text-muted-foreground">
-                No tutors currently match your learning criteria.
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {tutors.slice(0, visibleTutors).map((tutor: any) => (
-                <div
-                  key={tutor.id}
-                  className="border rounded-lg p-6 hover:border-primary transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center mb-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-black text-white flex items-center justify-center mr-3">
-                          <span className="text-md font-medium">
-                            {tutor.user.fullName
-                              .split(" ")
-                              .map((n: string) => n[0])
-                              .join("")}
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-lg">
-                            {tutor.user.fullName}
-                          </h3>
-                          <div className="flex items-center text-sm text-muted-foreground gap-2">
-                            <School className="h-4 w-4" />
-                            <span>{tutor.user.program}</span>
-                          </div>
-                          <div className="mt-1 flex items-center">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`h-3 w-3 ${
-                                  star <= (tutor.rating / 10)
-                                    ? "text-yellow-500 fill-current"
-                                    : "text-gray-300"
-                                }`}
-                              />
-                            ))}
-                            <span className="ml-2 text-xs text-muted-foreground">
-                              {(tutor.rating / 10).toFixed(1)} ({tutor.reviewCount} reviews)
-                            </span>
-                          </div>
-                          <div className="mt-2 text-sm">
-                            <span className="font-medium text-green-600 dark:text-green-500">
-                              Rate: Rs. {tutor.hourlyRate.toLocaleString()}/hour
-                            </span>
-                          </div>
-                        </div>
+      {isLoading ? (
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="mt-4 text-muted-foreground">Loading tutors...</p>
+        </div>
+      ) : tutors.length === 0 ? (
+        <div className="text-center py-12">
+          <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium">No tutors found</h3>
+          <p className="text-sm text-muted-foreground">
+            No tutors currently match your learning criteria.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {tutors.slice(0, visibleTutors).map((tutor: any) => (
+            <Card key={tutor.id} className="border border-gray-200 overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex flex-col">
+                  {/* Tutor Header Section */}
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center">
+                      <span className="text-xl font-bold">
+                        {tutor.user.fullName
+                          .split(" ")
+                          .map((n: string) => n[0])
+                          .join("")}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">{tutor.user.fullName}</h3>
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <Building className="h-4 w-4" />
+                        <span className="text-sm">{tutor.user.university || "University"}</span>
                       </div>
-
-                      <div className="grid gap-4 mb-4">
-                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                          <h4 className="font-medium mb-3 flex items-center gap-2 text-primary">
-                            <BookOpen className="h-5 w-5" />
-                            Tutor Profile
-                          </h4>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <div className="text-sm">
-                                <span className="text-muted-foreground">
-                                  Program:
-                                </span>
-                                <div className="font-medium">
-                                  {tutor.user.program || "Not specified"}
-                                </div>
-                              </div>
-                              <div className="text-sm">
-                                <span className="text-muted-foreground">
-                                  Experience:
-                                </span>
-                                <div className="font-medium">
-                                  {tutor.experience || "Not specified"}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <div className="text-sm">
-                                <span className="text-muted-foreground">
-                                  Hourly Rate:
-                                </span>
-                                <div className="font-medium text-green-600 dark:text-green-500">
-                                  Rs. {tutor.hourlyRate.toLocaleString()}/hour
-                                </div>
-                              </div>
-                              <div className="text-sm">
-                                <span className="text-muted-foreground">
-                                  Status:
-                                </span>
-                                <div className="font-medium">
-                                  {tutor.isAvailableNow ? (
-                                    <span className="flex items-center text-green-600">
-                                      <span className="h-2 w-2 rounded-full bg-green-600 mr-1"></span>
-                                      Available Now
-                                    </span>
-                                  ) : (
-                                    <span className="flex items-center text-amber-600">
-                                      <span className="h-2 w-2 rounded-full bg-amber-600 mr-1"></span>
-                                      Unavailable
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="text-sm mt-2">
-                                <span className="text-muted-foreground">
-                                  Availability:
-                                </span>
-                                <div className="font-medium">
-                                  {tutor.availability || "Contact tutor for schedule"}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                            <h4 className="font-medium mb-3 flex items-center gap-2 text-primary">
-                              <BookOpen className="h-5 w-5" />
-                              Subjects
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {tutor.subjects?.map((subject: string, index: number) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
-                                  className="px-2 py-1"
-                                >
-                                  {subject}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                            <h4 className="font-medium mb-3 flex items-center gap-2 text-primary">
-                              <Clock className="h-5 w-5" />
-                              Availability
-                            </h4>
-                            <p className="text-sm">
-                              {tutor.isAvailableNow ? "Available now for immediate sessions." : "Check with tutor for availability."}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-start gap-2">
-                        <Button
-                          size="sm"
-                          className="flex items-center bg-gradient-to-r from-red-500 to-black hover:from-red-600 hover:to-gray-900"
-                          onClick={() => handleMessage(tutor.user.id)}
-                        >
-                          <MessageCircle className="h-4 w-4 mr-1" />
-                          <span>Message</span>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-red-500 hover:bg-red-50 hover:text-red-600"
-                          onClick={() => handleViewProfile(tutor.user.id)}
-                        >
-                          View Profile
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="bg-green-600 hover:bg-green-700"
-                          onClick={() => handleBookSession(tutor)}
-                        >
-                          Book Session
-                        </Button>
+                      <div className="text-green-600 font-medium mt-1">
+                        Rate: Rs. {tutor.hourlyRate}/hour
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
 
-          {visibleTutors < tutors.length && (
-            <div className="mt-8 text-center">
-              <Button
-                variant="outline"
-                onClick={loadMore}
-                className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                Load More Tutors
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  {/* Academic Profile Section */}
+                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                    <div className="flex items-center gap-2 text-red-500 mb-2">
+                      <BookOpen className="h-5 w-5" />
+                      <span className="font-medium">Academic Profile</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm font-medium">Program:</div>
+                        <div>{tutor.user.program || "Computer Science"}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium">University:</div>
+                        <div>{tutor.user.university || "szarist University"}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium">Semester:</div>
+                        <div>{tutor.user.semester || "6 Semester"}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium">Hourly Rate:</div>
+                        <div className="text-green-600">Rs. {tutor.hourlyRate}/hour</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Subjects Section */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 text-red-500 mb-2">
+                        <BookOpen className="h-5 w-5" />
+                        <span className="font-medium">Subjects</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {tutor.subjects?.map((subject: string, index: number) => (
+                          <Badge
+                            key={index}
+                            className="bg-red-100 text-red-800 hover:bg-red-200 border-0"
+                          >
+                            {subject}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 text-red-500 mb-2">
+                        <Clock className="h-5 w-5" />
+                        <span className="font-medium">Availability</span>
+                      </div>
+                      <div className="text-gray-700">
+                        {tutor.availability || "tuesday 3-5pm"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button
+                      className="bg-red-600 hover:bg-red-700 text-white rounded-md h-10 px-4 py-2 flex items-center gap-2"
+                      onClick={() => handleMessage(tutor.user.id)}
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                      Message
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md h-10 px-4 py-2"
+                      onClick={() => handleViewProfile(tutor.user.id)}
+                    >
+                      View Profile
+                    </Button>
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 text-white rounded-md h-10 px-4 py-2"
+                      onClick={() => handleBookSession(tutor)}
+                    >
+                      Book Session
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {visibleTutors < tutors.length && (
+        <div className="mt-8 text-center">
+          <Button
+            variant="outline"
+            onClick={loadMore}
+            className="bg-white border-gray-300 hover:bg-gray-50"
+          >
+            Load More Tutors
+          </Button>
+        </div>
+      )}
 
       {bookingTutor && (
         <BookingModal
