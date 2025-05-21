@@ -124,26 +124,26 @@ export default function FindTutors() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {tutors.slice(0, visibleTutors).map((tutor: any) => (
-            <div key={tutor.id} className="bg-red-100 bg-opacity-30 rounded-lg overflow-hidden">
-              {/* Tutor Header Section with Name and Rate */}
+            <div key={tutor.id} className="rounded-xl border border-red-200 overflow-hidden">
+              {/* Top Section */}
               <div className="p-5">
-                <div className="flex items-center gap-3 mb-1">
-                  <div className="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center">
-                    <span className="text-2xl font-bold">
+                <div className="flex gap-4">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-b from-red-600 to-red-800">
+                    <div className="w-full h-full flex items-center justify-center text-white font-bold text-2xl">
                       {tutor.user.fullName
                         .split(" ")
                         .map((n: string) => n[0])
                         .join("")
                         .toLowerCase()}
-                    </span>
+                    </div>
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold text-gray-800">{tutor.user.fullName}</h3>
-                    <div className="flex items-center gap-1 text-gray-600 mt-1">
-                      <Building className="h-4 w-4" />
+                    <div className="flex items-center text-gray-500 mt-1">
+                      <Building className="h-4 w-4 mr-1" />
                       <span>{tutor.user.university || "szabist University"}</span>
                     </div>
-                    <div className="text-green-600 font-medium mt-1">
+                    <div className="text-green-600 font-medium mt-1 text-lg">
                       Rate: Rs. {tutor.hourlyRate}/hour
                     </div>
                   </div>
@@ -151,43 +151,43 @@ export default function FindTutors() {
               </div>
 
               {/* Academic Profile Section */}
-              <div className="bg-white rounded-lg mx-5 mb-4 p-4">
-                <div className="flex items-center gap-2 text-red-500 mb-3">
+              <div className="bg-gray-50 mx-5 mb-4 p-5 rounded-lg">
+                <div className="flex items-center gap-2 text-red-500 mb-4">
                   <BookOpen className="h-5 w-5" />
-                  <span className="font-medium">Academic Profile</span>
+                  <span className="font-medium text-xl">Academic Profile</span>
                 </div>
-                <div className="grid grid-cols-2 gap-y-4">
+                <div className="grid grid-cols-2 gap-y-6">
                   <div>
-                    <div className="text-gray-700">Program:</div>
-                    <div className="text-gray-900">{tutor.user.program || "Computer Science"}</div>
+                    <div className="text-gray-600 text-base">Program:</div>
+                    <div className="text-gray-900 text-lg font-medium">{tutor.user.program || "Computer Science"}</div>
                   </div>
                   <div>
-                    <div className="text-gray-700">University:</div>
-                    <div className="text-gray-900">{tutor.user.university || "szabist University"}</div>
+                    <div className="text-gray-600 text-base">University:</div>
+                    <div className="text-gray-900 text-lg font-medium">{tutor.user.university || "szabist University"}</div>
                   </div>
                   <div>
-                    <div className="text-gray-700">Semester:</div>
-                    <div className="text-gray-900">{tutor.user.semester || "6"}</div>
+                    <div className="text-gray-600 text-base">Semester:</div>
+                    <div className="text-gray-900 text-lg font-medium">{tutor.user.semester || "6 Semester"}</div>
                   </div>
                   <div>
-                    <div className="text-gray-700">Hourly Rate:</div>
-                    <div className="text-green-600">Rs. {tutor.hourlyRate}/hour</div>
+                    <div className="text-gray-600 text-base">Hourly Rate:</div>
+                    <div className="text-green-600 text-lg font-medium">Rs. {tutor.hourlyRate}/hour</div>
                   </div>
                 </div>
               </div>
 
               {/* Subjects and Availability Sections */}
-              <div className="grid grid-cols-2 gap-4 mx-5 mb-5">
-                <div className="bg-white rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-red-500 mb-3">
+              <div className="grid grid-cols-2 gap-4 mx-5 mb-6">
+                <div className="bg-gray-50 rounded-lg p-5">
+                  <div className="flex items-center gap-2 text-red-500 mb-4">
                     <BookOpen className="h-5 w-5" />
-                    <span className="font-medium">Subjects</span>
+                    <span className="font-medium text-xl">Subjects</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {tutor.subjects?.map((subject: string, index: number) => (
                       <span
                         key={index}
-                        className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm"
+                        className="bg-red-100 text-red-800 px-4 py-2 rounded-full text-base"
                       >
                         {subject}
                       </span>
@@ -195,35 +195,35 @@ export default function FindTutors() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-red-500 mb-3">
+                <div className="bg-gray-50 rounded-lg p-5">
+                  <div className="flex items-center gap-2 text-red-500 mb-4">
                     <Clock className="h-5 w-5" />
-                    <span className="font-medium">Availability</span>
+                    <span className="font-medium text-xl">Availability</span>
                   </div>
-                  <div className="text-gray-700">
+                  <div className="text-gray-800 text-lg">
                     {tutor.availability || "tuesday 3-5pm"}
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-3 gap-2 mx-5 mb-5">
+              <div className="flex mx-5 mb-6 gap-2">
                 <Button
-                  className="bg-red-600 hover:bg-red-700 text-white rounded h-12"
+                  className="bg-red-600 hover:bg-red-700 text-white rounded-md h-14 text-base flex-1"
                   onClick={() => handleMessage(tutor.user.id)}
                 >
-                  <MessageCircle className="h-5 w-5 mr-1" />
+                  <MessageCircle className="h-5 w-5 mr-2" />
                   Message
                 </Button>
                 <Button
                   variant="outline"
-                  className="border-red-100 text-red-600 hover:bg-red-50 hover:text-red-700 bg-white rounded h-12"
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md h-14 text-base flex-1"
                   onClick={() => handleViewProfile(tutor.user.id)}
                 >
                   View Profile
                 </Button>
                 <Button
-                  className="bg-green-600 hover:bg-green-700 text-white rounded h-12"
+                  className="bg-green-600 hover:bg-green-700 text-white rounded-md h-14 text-base flex-1"
                   onClick={() => handleBookSession(tutor)}
                 >
                   Book Session
