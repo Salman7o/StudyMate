@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { useAuth } from "@/contexts/auth-context";
@@ -6,7 +7,7 @@ import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { Star } from "lucide-react";
+import { Star, MessageSquare } from "lucide-react";
 
 interface TutorCardProps {
   tutor: {
@@ -78,7 +79,7 @@ export function TutorCard({ tutor }: TutorCardProps) {
   };
 
   const handleViewProfile = () => {
-    setLocation(`/tutors/${tutor.user.id}`);
+    setLocation(`/tutor-profile/${tutor.user.id}`);
   };
 
   // Convert rating from 0-50 scale to 0-5 scale
@@ -86,114 +87,115 @@ export function TutorCard({ tutor }: TutorCardProps) {
 
   return (
     <>
-      <div className="bg-gradient-to-br from-black to-red-900 rounded-lg shadow overflow-hidden text-white">
-        <div className="relative">
-          <img
-            src={`https://images.unsplash.com/photo-1501504905252-473c47e087f8?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=150&q=80`}
-            alt="Tutor background"
-            className="w-full h-24 object-cover opacity-80"
-          />
-          <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-            <div className="w-16 h-16 rounded-full ring-4 ring-white dark:ring-gray-800 bg-gray-200 transform translate-y-1/2 overflow-hidden">
-              {tutor.user.profileImage ? (
-                <img
-                  src={tutor.user.profileImage}
-                  alt={tutor.user.fullName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-red-800 text-white flex items-center justify-center">
+      <div className="border rounded-lg bg-gradient-to-br from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 p-6 hover:border-primary transition-colors">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-center mr-3">
+                {tutor.user.profileImage ? (
+                  <img
+                    src={tutor.user.profileImage}
+                    alt={tutor.user.fullName}
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
                   <span className="text-lg font-medium">
                     {tutor.user.fullName.split(" ").map(n => n[0]).join("")}
                   </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="pt-10 p-6">
-          <div className="text-center mb-4">
-            <h3 className="text-xl font-semibold text-white">{tutor.user.fullName}</h3>
-            <p className="text-gray-300 text-sm">
-              {tutor.subjects.join(", ")} Specialist
-            </p>
-            <div className="flex items-center justify-center mt-1">
-              <div className="flex text-yellow-400">
-                {[1, 2, 3, 4, 5].map((star) => {
-                  const isFilled = star <= ratingOutOfFive;
-                  const isHalf = !isFilled && star - 0.5 <= ratingOutOfFive;
-
-                  return (
-                    <span key={star} className="mx-0.5">
-                      {isFilled ? (
-                        <Star className="h-4 w-4 fill-current" />
-                      ) : isHalf ? (
-                        <span className="relative">
-                          <Star className="h-4 w-4 text-gray-300 dark:text-gray-600" />
-                          <span className="absolute top-0 left-0 overflow-hidden w-1/2">
-                            <Star className="h-4 w-4 fill-current" />
-                          </span>
-                        </span>
-                      ) : (
-                        <Star className="h-4 w-4 text-gray-300 dark:text-gray-600" />
-                      )}
-                    </span>
-                  );
-                })}
+                )}
               </div>
-              <span className="ml-1 text-sm text-gray-300">
-                {ratingOutOfFive.toFixed(1)} ({tutor.reviewCount} reviews)
-              </span>
+              <div>
+                <h3 className="font-medium text-lg">
+                  {tutor.user.fullName}
+                </h3>
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <span>{tutor.subjects.join(", ")} Specialist</span>
+                </div>
+                <div className="mt-1 flex items-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-3 w-3 ${
+                        star <= ratingOutOfFive 
+                          ? "text-yellow-500 fill-current" 
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {ratingOutOfFive.toFixed(1)} ({tutor.reviewCount} reviews)
+                  </span>
+                </div>
+                <div className="mt-2 text-sm">
+                  <span className="font-medium text-green-600 dark:text-green-500">
+                    Rate: Rs. {tutor.hourlyRate.toLocaleString()}/hour
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="space-y-3 mb-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-300">Subject:</span>
-              <span className="font-medium text-white">{tutor.subjects.join(", ")}</span>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                <h4 className="font-medium mb-2">Experience</h4>
+                <p className="text-sm text-muted-foreground">
+                  {tutor.experience || "Not specified"}
+                </p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                <h4 className="font-medium mb-2">Subjects</h4>
+                <div className="flex flex-wrap gap-1">
+                  {tutor.subjects.map((subject, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {subject}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-300">Experience:</span>
-              <span className="font-medium text-white">{tutor.experience}</span>
+
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg py-2 px-3">
+                <span className="text-sm font-medium">Status: </span>
+                {tutor.isAvailableNow ? (
+                  <span className="text-green-600 font-medium text-sm inline-flex items-center">
+                    <span className="h-2 w-2 rounded-full bg-green-600 mr-1"></span>
+                    Available Now
+                  </span>
+                ) : (
+                  <span className="text-amber-600 font-medium text-sm inline-flex items-center">
+                    <span className="h-2 w-2 rounded-full bg-amber-600 mr-1"></span>
+                    Unavailable
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-300">Rate:</span>
-              <span className="font-medium text-white">Rs. {tutor.hourlyRate}/hour</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-300">Availability:</span>
-              {tutor.isAvailableNow ? (
-                <span className="text-green-400 font-medium flex items-center">
-                  <span className="h-2 w-2 rounded-full bg-green-400 mr-1"></span>
-                  Available Now
-                </span>
-              ) : (
-                <span className="text-red-400 font-medium flex items-center">
-                  <span className="h-2 w-2 rounded-full bg-red-400 mr-1"></span>
-                  Busy
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex space-x-2">
-            <Button 
-              className="flex-1 bg-gradient-to-r from-red-700 to-red-900 hover:from-red-800 hover:to-red-950 text-white"
-              onClick={handleBookSession}>
-              Book Session
-            </Button>
-            <Button
-              variant="secondary"
-              className="border border-red-500 bg-transparent hover:bg-red-800/20 text-white"
-              onClick={handleMessage}
-            >
-              Message
-            </Button>
-            <div className="ml-2">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="h-8 px-2 border-red-500 text-white hover:bg-red-800/20" 
-                onClick={handleViewProfile}>
+
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                onClick={handleBookSession}
+                className="bg-primary text-white hover:bg-primary/90"
+              >
+                Book Session
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleViewProfile}
+                className="border-primary text-primary hover:bg-primary/10"
+              >
                 View Profile
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleMessage}
+                className="text-gray-700 dark:text-gray-300"
+              >
+                <span className="flex items-center">
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  Message
+                </span>
               </Button>
             </div>
           </div>
