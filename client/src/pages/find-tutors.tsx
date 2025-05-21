@@ -124,68 +124,70 @@ export default function FindTutors() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {tutors.slice(0, visibleTutors).map((tutor: any) => (
-            <div key={tutor.id} className="bg-red-50/30 rounded-lg border border-red-200 p-6">
-              {/* Tutor Header Section */}
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0">
-                  <span className="text-xl font-bold">
-                    {tutor.user.fullName
-                      .split(" ")
-                      .map((n: string) => n[0])
-                      .join("")
-                      .toLowerCase()}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-800">{tutor.user.fullName}</h3>
-                  <div className="flex items-center gap-1 text-gray-600 mt-1">
-                    <Building className="h-4 w-4" />
-                    <span className="text-base">{tutor.user.university || "szabist University"}</span>
+            <div key={tutor.id} className="bg-red-100 bg-opacity-30 rounded-lg overflow-hidden">
+              {/* Tutor Header Section with Name and Rate */}
+              <div className="p-5">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center">
+                    <span className="text-2xl font-bold">
+                      {tutor.user.fullName
+                        .split(" ")
+                        .map((n: string) => n[0])
+                        .join("")
+                        .toLowerCase()}
+                    </span>
                   </div>
-                  <div className="text-green-600 font-medium mt-1 text-lg">
-                    Rate: Rs. {tutor.hourlyRate}/hour
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-800">{tutor.user.fullName}</h3>
+                    <div className="flex items-center gap-1 text-gray-600 mt-1">
+                      <Building className="h-4 w-4" />
+                      <span>{tutor.user.university || "szabist University"}</span>
+                    </div>
+                    <div className="text-green-600 font-medium mt-1">
+                      Rate: Rs. {tutor.hourlyRate}/hour
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Academic Profile Section */}
-              <div className="bg-white rounded-lg p-5 mb-4">
-                <div className="flex items-center gap-2 text-red-500 mb-4">
+              <div className="bg-white rounded-lg mx-5 mb-4 p-4">
+                <div className="flex items-center gap-2 text-red-500 mb-3">
                   <BookOpen className="h-5 w-5" />
-                  <span className="font-medium text-lg">Academic Profile</span>
+                  <span className="font-medium">Academic Profile</span>
                 </div>
-                <div className="grid grid-cols-2 gap-y-6">
+                <div className="grid grid-cols-2 gap-y-4">
                   <div>
-                    <div className="text-gray-700 font-medium">Program:</div>
-                    <div className="text-gray-900 text-lg">{tutor.user.program || "Computer Science"}</div>
+                    <div className="text-gray-700">Program:</div>
+                    <div className="text-gray-900">{tutor.user.program || "Computer Science"}</div>
                   </div>
                   <div>
-                    <div className="text-gray-700 font-medium">University:</div>
-                    <div className="text-gray-900 text-lg">{tutor.user.university || "szabist University"}</div>
+                    <div className="text-gray-700">University:</div>
+                    <div className="text-gray-900">{tutor.user.university || "szabist University"}</div>
                   </div>
                   <div>
-                    <div className="text-gray-700 font-medium">Semester:</div>
-                    <div className="text-gray-900 text-lg">{tutor.user.semester || "6 Semester"}</div>
+                    <div className="text-gray-700">Semester:</div>
+                    <div className="text-gray-900">{tutor.user.semester || "6"}</div>
                   </div>
                   <div>
-                    <div className="text-gray-700 font-medium">Hourly Rate:</div>
-                    <div className="text-green-600 text-lg">Rs. {tutor.hourlyRate}/hour</div>
+                    <div className="text-gray-700">Hourly Rate:</div>
+                    <div className="text-green-600">Rs. {tutor.hourlyRate}/hour</div>
                   </div>
                 </div>
               </div>
 
               {/* Subjects and Availability Sections */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-white rounded-lg p-5">
-                  <div className="flex items-center gap-2 text-red-500 mb-4">
+              <div className="grid grid-cols-2 gap-4 mx-5 mb-5">
+                <div className="bg-white rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-red-500 mb-3">
                     <BookOpen className="h-5 w-5" />
-                    <span className="font-medium text-lg">Subjects</span>
+                    <span className="font-medium">Subjects</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {tutor.subjects?.map((subject: string, index: number) => (
                       <span
                         key={index}
-                        className="bg-red-100 text-red-800 px-4 py-2 rounded-full text-base"
+                        className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm"
                       >
                         {subject}
                       </span>
@@ -193,35 +195,35 @@ export default function FindTutors() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-5">
-                  <div className="flex items-center gap-2 text-red-500 mb-4">
+                <div className="bg-white rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-red-500 mb-3">
                     <Clock className="h-5 w-5" />
-                    <span className="font-medium text-lg">Availability</span>
+                    <span className="font-medium">Availability</span>
                   </div>
-                  <div className="text-gray-700 text-lg">
+                  <div className="text-gray-700">
                     {tutor.availability || "tuesday 3-5pm"}
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-3">
+              <div className="grid grid-cols-3 gap-2 mx-5 mb-5">
                 <Button
-                  className="bg-red-600 hover:bg-red-700 text-white rounded-md flex-1 h-14 text-base"
+                  className="bg-red-600 hover:bg-red-700 text-white rounded h-12"
                   onClick={() => handleMessage(tutor.user.id)}
                 >
-                  <MessageCircle className="h-5 w-5 mr-2" />
+                  <MessageCircle className="h-5 w-5 mr-1" />
                   Message
                 </Button>
                 <Button
                   variant="outline"
-                  className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md flex-1 h-14 text-base bg-white"
+                  className="border-red-100 text-red-600 hover:bg-red-50 hover:text-red-700 bg-white rounded h-12"
                   onClick={() => handleViewProfile(tutor.user.id)}
                 >
                   View Profile
                 </Button>
                 <Button
-                  className="bg-green-600 hover:bg-green-700 text-white rounded-md flex-1 h-14 text-base"
+                  className="bg-green-600 hover:bg-green-700 text-white rounded h-12"
                   onClick={() => handleBookSession(tutor)}
                 >
                   Book Session
