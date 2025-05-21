@@ -134,176 +134,150 @@ export default function FindTutors() {
           ) : (
             <div className="grid gap-4">
               {tutors.slice(0, visibleTutors).map((tutor: any) => (
-                <div
-                  key={tutor.id}
-                  className="border rounded-lg p-6 hover:border-primary transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center mb-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-black text-white flex items-center justify-center mr-3">
-                          <span className="text-md font-medium">
+                <Card key={tutor.id} className="border border-gray-200">
+                  <CardContent className="p-6">
+                    {/* Tutor Name and Avatar Header */}
+                    <div className="mb-2">
+                      <div className="flex items-center">
+                        <div className="w-16 h-16 rounded-full bg-red-700 flex items-center justify-center text-white text-xl font-medium mr-4">
+                          <span>
                             {tutor.user.fullName
                               .split(" ")
                               .map((n: string) => n[0])
-                              .join("")}
+                              .join("")
+                              .toLowerCase()}
                           </span>
                         </div>
                         <div>
-                          <h3 className="font-medium text-lg">
+                          <h3 className="text-2xl font-normal">
                             {tutor.user.fullName}
                           </h3>
-                          <div className="flex items-center text-sm text-muted-foreground gap-2">
+                          <div className="flex items-center text-gray-600 gap-2 mt-1">
                             <School className="h-4 w-4" />
-                            <span>{tutor.user.program}</span>
+                            <span>{tutor.user.program || "Computer Science"}</span>
                           </div>
                           <div className="mt-1 flex items-center">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <Star
                                 key={star}
-                                className={`h-3 w-3 ${
+                                className={`h-4 w-4 ${
                                   star <= (tutor.rating / 10)
-                                    ? "text-yellow-500 fill-current"
+                                    ? "text-yellow-400 fill-current"
                                     : "text-gray-300"
                                 }`}
                               />
                             ))}
-                            <span className="ml-2 text-xs text-muted-foreground">
+                            <span className="ml-2 text-gray-500 text-sm">
                               {(tutor.rating / 10).toFixed(1)} ({tutor.reviewCount} reviews)
                             </span>
                           </div>
-                          <div className="mt-2 text-sm">
-                            <span className="font-medium text-green-600 dark:text-green-500">
+                          <div className="mt-2">
+                            <span className="font-medium text-green-600">
                               Rate: Rs. {tutor.hourlyRate.toLocaleString()}/hour
                             </span>
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="grid gap-4 mb-4">
-                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                          <h4 className="font-medium mb-3 flex items-center gap-2 text-primary">
-                            <BookOpen className="h-5 w-5" />
-                            Tutor Profile
-                          </h4>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <div className="text-sm">
-                                <span className="text-muted-foreground">
-                                  Program:
-                                </span>
-                                <div className="font-medium">
-                                  {tutor.user.program || "Not specified"}
-                                </div>
-                              </div>
-                              <div className="text-sm">
-                                <span className="text-muted-foreground">
-                                  Experience:
-                                </span>
-                                <div className="font-medium">
-                                  {tutor.experience || "Not specified"}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <div className="text-sm">
-                                <span className="text-muted-foreground">
-                                  Hourly Rate:
-                                </span>
-                                <div className="font-medium text-green-600 dark:text-green-500">
-                                  Rs. {tutor.hourlyRate.toLocaleString()}/hour
-                                </div>
-                              </div>
-                              <div className="text-sm">
-                                <span className="text-muted-foreground">
-                                  Status:
-                                </span>
-                                <div className="font-medium">
-                                  {tutor.isAvailableNow ? (
-                                    <span className="flex items-center text-green-600">
-                                      <span className="h-2 w-2 rounded-full bg-green-600 mr-1"></span>
-                                      Available Now
-                                    </span>
-                                  ) : (
-                                    <span className="flex items-center text-amber-600">
-                                      <span className="h-2 w-2 rounded-full bg-amber-600 mr-1"></span>
-                                      Unavailable
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="text-sm mt-2">
-                                <span className="text-muted-foreground">
-                                  Availability:
-                                </span>
-                                <div className="font-medium">
-                                  {tutor.availability || "Contact tutor for schedule"}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                            <h4 className="font-medium mb-3 flex items-center gap-2 text-primary">
-                              <BookOpen className="h-5 w-5" />
-                              Subjects
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {tutor.subjects?.map((subject: string, index: number) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
-                                  className="px-2 py-1"
-                                >
-                                  {subject}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                            <h4 className="font-medium mb-3 flex items-center gap-2 text-primary">
-                              <Clock className="h-5 w-5" />
-                              Availability
-                            </h4>
-                            <p className="text-sm">
-                              {tutor.isAvailableNow ? "Available now for immediate sessions." : "Check with tutor for availability."}
-                            </p>
-                          </div>
-                        </div>
+                    {/* Tutor Profile Section */}
+                    <div>
+                      <div className="flex items-center text-red-400 mt-4 mb-3">
+                        <BookOpen className="h-5 w-5 mr-2" />
+                        <h4 className="text-lg font-normal">Tutor Profile</h4>
                       </div>
-
-                      <div className="flex items-center justify-start gap-2">
-                        <Button
-                          size="sm"
-                          className="flex items-center bg-gradient-to-r from-red-500 to-black hover:from-red-600 hover:to-gray-900"
-                          onClick={() => handleMessage(tutor.user.id)}
-                        >
-                          <MessageCircle className="h-4 w-4 mr-1" />
-                          <span>Message</span>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-red-500 hover:bg-red-50 hover:text-red-600"
-                          onClick={() => handleViewProfile(tutor.user.id)}
-                        >
-                          View Profile
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="bg-green-600 hover:bg-green-700"
-                          onClick={() => handleBookSession(tutor)}
-                        >
-                          Book Session
-                        </Button>
+                      
+                      <div className="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                          <p className="text-gray-700 mb-1">Program:</p>
+                          <p className="mb-4">{tutor.user.program || "Computer Science"}</p>
+                          
+                          <p className="text-gray-700 mb-1">Experience:</p>
+                          <p>{tutor.experience || "New tutor on the platform"}</p>
+                        </div>
+                        
+                        <div>
+                          <p className="text-gray-700 mb-1">Hourly Rate:</p>
+                          <p className="text-green-600 mb-4">Rs. {tutor.hourlyRate.toLocaleString()}/hour</p>
+                          
+                          <p className="text-gray-700 mb-1">Status:</p>
+                          {tutor.isAvailableNow ? (
+                            <p className="flex items-center text-green-600">
+                              <span className="h-2 w-2 rounded-full bg-green-600 mr-2"></span>
+                              Available Now
+                            </p>
+                          ) : (
+                            <p className="flex items-center text-amber-600">
+                              <span className="h-2 w-2 rounded-full bg-amber-600 mr-2"></span>
+                              Unavailable
+                            </p>
+                          )}
+                          
+                          <p className="text-gray-700 mt-4 mb-1">Availability:</p>
+                          <p>{tutor.availability || "tuesday 3-5pm"}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+
+                    {/* Subjects and Availability Sections */}
+                    <div className="grid grid-cols-2 gap-6 mb-6">
+                      <div>
+                        <div className="flex items-center text-red-400 mb-3">
+                          <BookOpen className="h-5 w-5 mr-2" />
+                          <h4 className="text-lg font-normal">Subjects</h4>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {tutor.subjects?.map((subject: string, index: number) => (
+                            <span
+                              key={index}
+                              className="bg-red-100 text-red-800 px-4 py-1 rounded-full"
+                            >
+                              {subject}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center text-red-400 mb-3">
+                          <Clock className="h-5 w-5 mr-2" />
+                          <h4 className="text-lg font-normal">Availability</h4>
+                        </div>
+                        <p className="text-gray-700">
+                          {tutor.isAvailableNow 
+                            ? "Available now for immediate sessions." 
+                            : "Contact tutor for availability."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="default"
+                        className="bg-red-700 hover:bg-red-800 text-white"
+                        onClick={() => handleMessage(tutor.user.id)}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Message
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="border-red-200 text-gray-700 hover:bg-red-50"
+                        onClick={() => handleViewProfile(tutor.user.id)}
+                      >
+                        View Profile
+                      </Button>
+                      <Button
+                        variant="default"
+                        className="bg-green-600 hover:bg-green-700 ml-auto"
+                        onClick={() => handleBookSession(tutor)}
+                      >
+                        Book Session
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
