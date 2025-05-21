@@ -388,6 +388,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sessionId = parseInt(req.params.id);
       const { status } = req.body;
+      
+      console.log(`Attempting to update session ${sessionId} to status: ${status}`);
 
       if (!status || !['pending', 'confirmed', 'completed', 'cancelled'].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
@@ -400,15 +402,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check authorization
-      const userId = req.user.id!;
-      if (session.studentId !== userId && session.tutorId !== userId) {
+      const userId = req.user?.id;
+      if (!userId || (session.studentId !== userId && session.tutorId !== userId)) {
         return res.status(403).json({ message: "You are not authorized to update this session" });
       }
 
       // Log the status change request
       console.log(`Session status change request: Session ${sessionId} from "${session.status}" to "${status}" by user ${userId}`);
       
-      // Handle different status updates based on user role and current status
+      // Permission checks based on status
       if (status === 'confirmed') {
         if (userId !== session.tutorId) {
           return res.status(403).json({ message: "Only tutors can confirm sessions" });
@@ -434,26 +436,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`User ${userId} cancelling session ${sessionId}`);
       }
 
-      if (status === 'cancelled') {
-        // Both students and tutors can cancel their own sessions
-        const updatedSession = await storage.updateSessionStatus(sessionId, status);
-        return res.json(updatedSession);
-      }
-
-      if (status === 'completed') {
-        if (userId === session.tutorId) {
-          const updatedSession = await storage.updateSessionStatus(sessionId, status);
-          return res.json(updatedSession);
-        }
-        return res.status(403).json({ message: "Only tutors can mark sessions as completed" });
-      }
-
-      const updatedSession = await storage.updateSessionStatus(sessionId, finalStatus);
-
+      // Update session status
+      console.log(`Now updating session ${sessionId} to status: ${status}`);
+      const updatedSession = await storage.updateSessionStatus(sessionId, status);
+      
       if (!updatedSession) {
-        return res.status(404).json({ message: "Session not found" });
+        return res.status(404).json({ message: "Session not found after update" });
       }
-
+      
+      console.log(`Successfully updated session ${sessionId} to status: ${status}`);
       return res.json(updatedSession);
     } catch (error) {
       console.error("Update session status error:", error);
