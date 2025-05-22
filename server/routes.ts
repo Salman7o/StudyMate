@@ -73,7 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Tutor profile routes
-  app.get("/api/tutors", isAuthenticated, async (req, res) => {
+  app.get("/api/tutors", async (req, res) => {
     try {
       // If query parameters are provided, use them
       if (Object.keys(req.query).length > 0) {
@@ -122,10 +122,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Students routes
-  app.get("/api/students", isAuthenticated, isAuthorized('tutor'), async (req, res) => {
+  app.get("/api/students", async (req, res) => {
     try {
-      // Get the tutor subjects to filter students
-      const userId = req.user.id!;
+      // Check if user is authenticated
+      if (!req.user) {
+        // Return all students if user is not authenticated
+        const allStudents = await storage.getAllUsers();
+        const students = allStudents.filter(user => user.role === 'student');
+        return res.json(students);
+      }
+      
+      // Get the tutor subjects to filter students if authenticated
+      const userId = req.user.id;
       console.log(`Finding students for tutor user ID: ${userId}`);
 
       const tutorProfile = await storage.getTutorProfileByUserId(userId);
@@ -177,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/students/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/students/:id", async (req, res) => {
     try {
       const studentId = parseInt(req.params.id);
       const student = await storage.getUser(studentId);
