@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SplashScreenProps {
   onFinished: () => void;
@@ -7,35 +7,72 @@ interface SplashScreenProps {
 
 export function SplashScreen({ onFinished }: SplashScreenProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [animationStep, setAnimationStep] = useState(1);
 
   useEffect(() => {
-    // Allow the animation to complete before hiding
-    const timer = setTimeout(() => {
+    // Animation sequence:
+    // Step 1: Show logo and brand (1.5s)
+    // Step 2: Start transition out (0.5s)
+    // Step 3: Complete and notify parent
+    
+    const stepOneTimer = setTimeout(() => {
+      setAnimationStep(2);
+    }, 1500);
+    
+    const stepTwoTimer = setTimeout(() => {
       setIsLoading(false);
-      setTimeout(onFinished, 500); // Wait for exit animation
-    }, 2000); // Total display time
+      setTimeout(onFinished, 800); // Wait for the curtain animation to complete
+    }, 2000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(stepOneTimer);
+      clearTimeout(stepTwoTimer);
+    };
   }, [onFinished]);
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-black to-red-900"
-      initial={{ opacity: 1 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <motion.div
-        className="flex flex-col items-center"
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ 
-          duration: 0.8, 
-          type: "spring", 
-          stiffness: 100 
-        }}
-      >
+    <AnimatePresence>
+      {isLoading && (
+        <motion.div
+          className="fixed inset-0 z-50 overflow-hidden"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Top curtain */}
+          <motion.div 
+            className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-black to-red-900 origin-top"
+            initial={{ scaleY: 1 }}
+            animate={{ scaleY: animationStep === 2 ? 0 : 1 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+          />
+          
+          {/* Bottom curtain */}
+          <motion.div 
+            className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-red-900 origin-bottom"
+            initial={{ scaleY: 1 }}
+            animate={{ scaleY: animationStep === 2 ? 0 : 1 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+          />
+          
+          {/* Content - stays centered */}
+          <motion.div
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: animationStep === 2 ? 0 : 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div
+              className="flex flex-col items-center"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.2, opacity: 0 }}
+              transition={{ 
+                duration: 0.6, 
+                type: "spring", 
+                stiffness: 100 
+              }}
+            >
         <motion.div 
           className="w-24 h-24 mb-6 relative"
           initial={{ rotateY: 0 }}

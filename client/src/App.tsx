@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
 import { MobileNavigation } from "@/components/layout/mobile-navigation";
-import { SplashScreen } from "@/components/ui/splash-screen";
+import { SplashScreen } from "@/components/ui/splash-screen-v2";
 
 import Home from "@/pages/home";
 import FindTutors from "@/pages/find-tutors";
