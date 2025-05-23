@@ -212,12 +212,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tutors/:id", async (req, res) => {
     try {
       const tutorId = parseInt(req.params.id);
-      const tutorProfile = await storage.getTutorProfile(tutorId);
-
+      
+      // First try to find by tutor profile ID
+      let tutorProfile = await storage.getTutorProfile(tutorId);
+      
+      // If not found, try to find by user ID
       if (!tutorProfile) {
-        return res.status(404).json({ message: "Tutor profile not found" });
+        // Try to find the user first to check if they're a tutor
+        const user = await storage.getUser(tutorId);
+        
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        if (user.role !== 'tutor') {
+          return res.status(404).json({ message: "User is not a tutor" });
+        }
+        
+        // Find tutor profile by user ID
+        tutorProfile = await storage.getTutorProfileByUserId(tutorId);
+        
+        if (!tutorProfile) {
+          return res.status(404).json({ message: "Tutor profile not found" });
+        }
+        
+        // Don't return password
+        const { password, ...userWithoutPassword } = user;
+        
+        return res.json({
+          ...tutorProfile,
+          user: userWithoutPassword
+        });
       }
 
+      // If found by tutor profile ID, continue with original logic
       const user = await storage.getUser(tutorProfile.userId);
 
       if (!user) {

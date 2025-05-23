@@ -16,9 +16,10 @@ import { useAuth } from "@/contexts/auth-context";
 export default function TutorProfilePage() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
-  const [tutor, setTutor] = useState(null);
+  type TutorProfileData = any; // Using any temporarily to fix type issues
+  const [tutor, setTutor] = useState<TutorProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
@@ -26,14 +27,17 @@ export default function TutorProfilePage() {
   useEffect(() => {
     const fetchTutorProfile = async () => {
       try {
-        const response = await apiRequest("GET", `/api/tutors/profile/${id}`);
+        // Use the updated endpoint that handles both profile ID and user ID lookups
+        const response = await apiRequest("GET", `/api/tutors/${id}`);
         if (!response.ok) {
           throw new Error("Failed to fetch tutor profile");
         }
         const data = await response.json();
+        console.log("Tutor profile data:", data);
         setTutor(data);
-      } catch (err) {
-        setError(err.message);
+      } catch (error) {
+        console.error("Error fetching tutor profile:", error);
+        setError(error instanceof Error ? error.message : "An unknown error occurred");
       } finally {
         setLoading(false);
       }
