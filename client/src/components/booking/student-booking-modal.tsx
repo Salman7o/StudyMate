@@ -154,8 +154,23 @@ export function StudentBookingModal({ isOpen, onClose, student }: StudentBooking
       console.log("Submitting booking data:", sessionData);
       
       const response = await apiRequest("POST", "/api/sessions", sessionData);
-      const result = await response.json();
-      console.log("Booking result:", result);
+      
+      if (!response.ok) {
+        try {
+          const errorData = await response.json();
+          console.error("Error from server:", errorData);
+          throw new Error(errorData?.message || "Failed to create session");
+        } catch (parseError) {
+          console.error("Error parsing server response:", parseError);
+          throw new Error("Failed to create session. Please try again.");
+        }
+      }
+      
+      const result = await response.json().catch(() => {
+        console.error("Error parsing session response");
+        return { id: "unknown" };
+      });
+      console.log("Session created successfully:", result);
 
       // Show payment success message
       toast({

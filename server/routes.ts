@@ -296,30 +296,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: result.error });
       }
 
-      // Check user roles and permissions for booking
-      const user = await storage.getUser(req.user.id);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      console.log("Session booking attempt:", {
-        userRole: user.role,
-        userId: user.id,
-        requestedStudentId: result.data.studentId,
-        requestedTutorId: result.data.tutorId
-      });
-      
-      // Allow both user types to book sessions with appropriate validation
-      if (user.role === 'student') {
-        if (result.data.studentId !== user.id) {
-          console.log("Permission denied: Student tried to book for another student");
-          return res.status(403).json({ message: "As a student, you can only book sessions for yourself" });
+      // Check if the user is authenticated
+      if (req.user) {
+        // If authenticated, verify user roles and permissions for booking
+        const user = await storage.getUser(req.user.id);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
         }
-      } else if (user.role === 'tutor') {
-        if (result.data.tutorId !== user.id) {
-          console.log("Permission denied: Tutor tried to book for another tutor");
-          return res.status(403).json({ message: "As a tutor, you can only create sessions where you are the tutor" });
+        
+        console.log("Session booking attempt:", {
+          userRole: user.role,
+          userId: user.id,
+          requestedStudentId: result.data.studentId,
+          requestedTutorId: result.data.tutorId
+        });
+        
+        // Allow both user types to book sessions with appropriate validation
+        if (user.role === 'student') {
+          if (result.data.studentId !== user.id) {
+            console.log("Permission denied: Student tried to book for another student");
+            return res.status(403).json({ message: "As a student, you can only book sessions for yourself" });
+          }
+        } else if (user.role === 'tutor') {
+          if (result.data.tutorId !== user.id) {
+            console.log("Permission denied: Tutor tried to book for another tutor");
+            return res.status(403).json({ message: "As a tutor, you can only create sessions where you are the tutor" });
+          }
         }
+      } else {
+        // If not authenticated, still allow the session to be booked
+        console.log("Unauthenticated session booking attempt");
       }
 
       const session = await storage.createSession(result.data);

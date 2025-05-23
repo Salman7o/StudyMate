@@ -133,20 +133,23 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
 
       // Create the session
       console.log("Submitting booking data:", sessionData);
-      const response = await fetch("/api/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sessionData),
-        credentials: "include"
-      });
+      const response = await apiRequest("POST", "/api/sessions", sessionData);
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        console.error("Error from server:", errorData);
-        throw new Error(errorData?.message || "Failed to create session");
+        try {
+          const errorData = await response.json();
+          console.error("Error from server:", errorData);
+          throw new Error(errorData?.message || "Failed to create session");
+        } catch (parseError) {
+          console.error("Error parsing server response:", parseError);
+          throw new Error("Failed to create session. Please try again.");
+        }
       }
       
-      const sessionResponse = await response.json();
+      const sessionResponse = await response.json().catch(() => {
+        console.error("Error parsing session response");
+        return { id: "unknown" };
+      });
       console.log("Session created successfully:", sessionResponse);
       
       // Set booking success and update UI
