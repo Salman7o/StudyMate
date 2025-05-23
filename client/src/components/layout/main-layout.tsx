@@ -16,7 +16,14 @@ interface MainLayoutProps {
 
 export function MainLayout({ children, showNav = true }: MainLayoutProps) {
   const [location] = useLocation();
-  const { user } = useAuth();
+  // Try to use auth context safely - this allows the component to work even without auth
+  let user = null;
+  try {
+    const auth = useAuth();
+    user = auth?.user;
+  } catch (error) {
+    console.log("Auth context not available, continuing without user data");
+  }
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const getInitials = (name: string) => {

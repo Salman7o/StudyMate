@@ -20,7 +20,7 @@ export default function TutorProfilePage() {
   const [tutor, setTutor] = useState<TutorProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useAuth();
+  // Only use authentication context when needed in interaction logic, not for initial display
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
 
@@ -121,10 +121,34 @@ export default function TutorProfilePage() {
               </div>
 
               <div className="flex space-x-4 w-full max-w-xs">
-                <Button className="flex-1" onClick={() => setShowBookingModal(true)}>
+                <Button 
+                  className="flex-1" 
+                  onClick={() => {
+                    try {
+                      // Try to use the booking modal with authentication
+                      setShowBookingModal(true);
+                    } catch (error) {
+                      // If auth context is not available, redirect to login
+                      console.error("Authentication required for booking");
+                      setLocation("/auth/login?redirect=/tutor-profile/" + id);
+                    }
+                  }}
+                >
                   Book Session
                 </Button>
-                <Button variant="outline" onClick={() => setShowChatModal(true)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    try {
+                      // Try to use the chat modal with authentication
+                      setShowChatModal(true);
+                    } catch (error) {
+                      // If auth context is not available, redirect to login
+                      console.error("Authentication required for messaging");
+                      setLocation("/auth/login?redirect=/tutor-profile/" + id);
+                    }
+                  }}
+                >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Message
                 </Button>
