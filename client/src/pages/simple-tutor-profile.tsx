@@ -1,7 +1,5 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
-import { MainLayout } from "@/components/layout/main-layout";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,23 +9,18 @@ import { Star, MessageSquare, Loader2, ChevronLeft } from "lucide-react";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ChatModal } from "@/components/chat/chat-modal";
 
-import { useAuth } from "@/contexts/auth-context";
-
-export default function TutorProfilePage() {
+export default function SimpleTutorProfile() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
-  type TutorProfileData = any; // Using any temporarily to fix type issues
-  const [tutor, setTutor] = useState<TutorProfileData | null>(null);
+  const [tutor, setTutor] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Only use authentication context when needed in interaction logic, not for initial display
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
 
   useEffect(() => {
     const fetchTutorProfile = async () => {
       try {
-        // Use the updated endpoint that handles both profile ID and user ID lookups
         const response = await apiRequest("GET", `/api/tutors/${id}`);
         if (!response.ok) {
           throw new Error("Failed to fetch tutor profile");
@@ -123,10 +116,8 @@ export default function TutorProfilePage() {
                   className="flex-1" 
                   onClick={() => {
                     try {
-                      // Try to use the booking modal with authentication
                       setShowBookingModal(true);
                     } catch (error) {
-                      // If auth context is not available, redirect to login
                       console.error("Authentication required for booking");
                       setLocation("/auth/login?redirect=/tutor-profile/" + id);
                     }
@@ -138,10 +129,8 @@ export default function TutorProfilePage() {
                   variant="outline" 
                   onClick={() => {
                     try {
-                      // Try to use the chat modal with authentication
                       setShowChatModal(true);
                     } catch (error) {
-                      // If auth context is not available, redirect to login
                       console.error("Authentication required for messaging");
                       setLocation("/auth/login?redirect=/tutor-profile/" + id);
                     }
@@ -162,7 +151,7 @@ export default function TutorProfilePage() {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Expertise</h3>
                 <div className="flex flex-wrap gap-2">
-                  {tutor.subjects?.map((subject) => (
+                  {tutor.subjects?.map((subject: string) => (
                     <Badge key={subject} variant="secondary">
                       {subject}
                     </Badge>
