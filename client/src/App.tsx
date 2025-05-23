@@ -18,6 +18,7 @@ import TutorDashboard from "@/pages/tutor-dashboard";
 import TopTutors from "@/pages/top-tutors";
 import StudentProfile from "@/pages/student-profile";
 import TutorProfilePage from "@/pages/tutor-profile-page";
+import SimpleTutorProfile from "@/pages/simple-tutor-profile";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import NotFound from "@/pages/not-found";
@@ -40,10 +41,10 @@ function App() {
                   <Route path="/profile" component={Profile} />
                   <Route path="/student-dashboard" component={StudentDashboard} />
                   <Route path="/tutor-dashboard" component={TutorDashboard} />
-                  <Route path="/tutor-profile/:id" component={TutorProfilePage} />
+                  <Route path="/tutor-profile/:id" component={SimpleTutorProfile} />
                   <Route path="/top-tutors" component={TopTutors} />
                   <Route path="/students/:id" component={StudentProfile} />
-                  <Route path="/tutors/:id" component={TutorProfilePage} />
+                  <Route path="/tutors/:id" component={SimpleTutorProfile} />
                   <Route path="/auth/login" component={Login} />
                   <Route path="/auth/register" component={Register} />
                   <Route component={NotFound} />
