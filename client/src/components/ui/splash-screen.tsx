@@ -42,10 +42,20 @@ export function SplashScreen({ onFinished }: SplashScreenProps) {
           animate={{ rotateY: 360 }}
           transition={{ duration: 1.5, ease: "easeInOut" }}
         >
-          <svg className="w-full h-full text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 4L4 8L12 12L20 8L12 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M4 12L12 16L20 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M4 16L12 20L20 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          {/* Graduation Cap Logo - Simplified to match the provided screenshot */}
+          <svg className="w-full h-full" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path 
+              fill="#C5322D" 
+              d="M5,11V16.5C5,16.5 8.5,19 12,19C15.5,19 19,16.5 19,16.5V11L12,15L5,11Z" 
+            />
+            <path 
+              fill="#C5322D" 
+              d="M12,4L4,8L12,12L20,8L12,4Z" 
+            />
+            <path 
+              fill="#C5322D" 
+              d="M20,10V15C21,15 22,14 22,13C22,12 21,11 20,10Z" 
+            />
           </svg>
           
           <motion.div
