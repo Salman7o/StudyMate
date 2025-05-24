@@ -14,7 +14,7 @@ import { queryClient } from "@/lib/queryClient";
 import { InterestedStudents } from "@/components/tutors/interested-students";
 
 export default function Profile() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, refreshUserData } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -115,32 +115,40 @@ export default function Profile() {
     e.preventDefault();
 
     try {
+      console.log("Submitting user profile update:", formData);
       // Update user profile
-      await apiRequest("PUT", `/api/users/${user?.id}`, formData);
+      const userResponse = await apiRequest("PUT", `/api/users/${user?.id}`, formData);
+      console.log("User profile update response:", userResponse);
       
       // If user is a tutor, update tutor profile
       if (user?.role === 'tutor') {
+        console.log("Submitting tutor profile update:", tutorFormData);
         if (tutorProfile) {
           // Update existing tutor profile
-          await apiRequest("PUT", `/api/tutors/${tutorProfile.id}`, tutorFormData);
+          const tutorResponse = await apiRequest("PUT", `/api/tutors/${tutorProfile.id}`, tutorFormData);
+          console.log("Tutor profile update response:", tutorResponse);
         } else {
           // Create new tutor profile
-          await apiRequest("POST", `/api/tutors`, {
+          const newTutorResponse = await apiRequest("POST", `/api/tutors`, {
             ...tutorFormData,
             userId: user?.id
           });
+          console.log("New tutor profile response:", newTutorResponse);
         }
         
         // Refresh tutor profile data
         queryClient.invalidateQueries({ queryKey: ['/api/tutors', user?.id] });
       }
       
+      // Manually refresh user data from auth context
+      await refreshUserData();
+      
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated",
       });
       
-      // Refresh user data
+      // Refresh user data in queries
       queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
       
       setIsEditing(false);

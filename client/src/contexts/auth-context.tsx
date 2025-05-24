@@ -24,30 +24,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isAuthenticated = !!user;
 
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const res = await fetch("/api/auth/me", {
-          credentials: "include",
-        });
+  const fetchCurrentUser = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/auth/me", {
+        credentials: "include",
+      });
 
-        if (res.ok) {
-          const data = await res.json();
-          console.log("Current user data:", data);
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Current user data:", data);
 
-          // Extract user data from the response
-          const userData = data.user || data;
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error("Failed to fetch current user:", error);
-      } finally {
-        setLoading(false);
+        // Extract user data from the response
+        const userData = data.user || data;
+        setUser(userData);
       }
-    };
-
-    fetchCurrentUser();
+    } catch (error) {
+      console.error("Failed to fetch current user:", error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Create a function to refresh user data that can be called after profile updates
+  const refreshUserData = useCallback(async () => {
+    await fetchCurrentUser();
+  }, [fetchCurrentUser]);
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, [fetchCurrentUser]);
 
   const login = async (username: string, password: string) => {
     try {
@@ -157,6 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        refreshUserData,
         isAuthenticated,
       }}
     >

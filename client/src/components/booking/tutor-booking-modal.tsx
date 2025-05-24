@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -27,7 +27,6 @@ import { useAuth } from "@/contexts/auth-context";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface TutorBookingModalProps {
   isOpen: boolean;
@@ -35,9 +34,8 @@ interface TutorBookingModalProps {
   student: {
     id: number;
     fullName: string;
-    program: string;
-    semester: string;
-    subjects: string[];
+    program?: string;
+    semester?: string;
   };
 }
 
@@ -49,42 +47,22 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [startTime, setStartTime] = useState("14:00");
   const [duration, setDuration] = useState("60");
-  const [subject, setSubject] = useState(student.subjects[0] || "");
   const [description, setDescription] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("easypaisa");
-  
-  // Payment confirmation flow states
-  const [step, setStep] = useState(1);
+  const [subject, setSubject] = useState("Calculus");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
-  const [isBookingSuccess, setIsBookingSuccess] = useState(false);
-  
-  // Calculate the total amount based on session duration and tutor's hourly rate
-  const hourlyRate = user?.role === "tutor" ? user.hourlyRate || 1000 : 1000; // Default rate if not available
-  const hours = parseInt(duration) / 60;
-  const totalAmount = hourlyRate * hours;
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
-  const resetForm = () => {
-    setSessionType("One-on-One Tutoring");
-    setDate(new Date());
-    setStartTime("14:00");
-    setDuration("60");
-    setSubject(student.subjects[0] || "");
-    setDescription("");
-    setPhoneNumber("");
-    setPaymentMethod("easypaisa");
-    setIsSubmitting(false);
-    setIsPaymentSuccess(false);
-    setIsBookingSuccess(false);
-    setStep(1);
-  };
+  // Tutors should set their own hourly rate when booking a student
+  const [hourlyRate, setHourlyRate] = useState(1000);
+  
+  const durationInHours = parseInt(duration) / 60;
+  const totalAmount = hourlyRate * durationInHours;
 
   const handleSubmit = async () => {
-    if (!user || !date || !phoneNumber) {
+    if (!user || !date) {
       toast({
         title: "Missing information", 
-        description: "Please enter a phone number for payment.",
+        description: "Please fill in all required fields.",
         variant: "destructive"
       });
       return;
@@ -92,306 +70,145 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
 
     try {
       setIsSubmitting(true);
-      
-      // Show payment processing simulation
-      toast({
-        title: "Processing Payment...",
-        description: "Please wait while we process your payment.",
-      });
 
-      // Simulate payment processing delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Show payment success immediately (simulated payment)
-      setIsPaymentSuccess(true);
-      
-      // Show payment success toast
-      toast({
-        title: "Payment Successful!",
-        description: "Your payment has been processed successfully.",
-        variant: "default",
-      });
+      // Create session directly (without payment step)
+      const startDateTime = new Date(date);
+      const [hours, minutes] = startTime.split(':');
+      startDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-      // Simulate a short delay before API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log("Tutor booking with student ID:", student.id, "and tutor ID:", user.id, "- Starting booking process");
-
-      // Format session data to exactly match the schema requirements
       const sessionData = {
-        studentId: Number(student.id),
-        tutorId: Number(user.id),
-        subject: subject || "General Tutoring", // Default value if empty
-        sessionType: sessionType || "online", // Default value if empty
-        date: date.toISOString(), // ISO string for proper date handling
-        startTime: startTime || "09:00", // Default if empty
-        duration: parseInt(duration) || 60, // Default if parsing fails
-        totalAmount: Math.round(totalAmount) || 1000, // Default if calculation fails
-        description: description || "",
-        status: "pending" // Initial status
+        studentId: student.id,
+        tutorId: user.id,
+        subject: subject,
+        sessionType: sessionType,
+        date: startDateTime.toISOString(),
+        startTime: startTime,
+        duration: parseInt(duration),
+        totalAmount: totalAmount,
+        description: description,
+        status: "pending",
       };
 
-      // Create the session
-      console.log("Submitting booking data:", sessionData);
-      const response = await apiRequest("POST", "/api/sessions", sessionData);
+      console.log("Creating session with data:", sessionData);
       
-      if (!response.ok) {
-        try {
-          const errorData = await response.json();
-          console.error("Error from server:", errorData);
-          throw new Error(errorData?.message || "Failed to create session");
-        } catch (parseError) {
-          console.error("Error parsing server response:", parseError);
-          throw new Error("Failed to create session. Please try again.");
-        }
-      }
+      await apiRequest("POST", "/api/sessions", sessionData);
+
+      // Show confirmation and update UI
+      setIsConfirmed(true);
       
-      const sessionResponse = await response.json().catch(() => {
-        console.error("Error parsing session response");
-        return { id: "unknown" };
-      });
-      console.log("Session created successfully:", sessionResponse);
-      
-      // Set booking success and update UI
-      setIsBookingSuccess(true);
-      
-      // Show booking success
+      // Invalidate sessions cache to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
+
+      // Show confirmation message
       toast({
-        title: "Booking Confirmed!",
-        description: "Your session has been scheduled successfully.",
-        variant: "default",
+        title: "Session Request Sent",
+        description: `You've requested a session with ${student.fullName}. They will need to confirm the booking.`,
       });
-      
-      // Invalidate sessions cache to reflect the new booking
-      queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/sessions/tutor"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/sessions/student"] });
-      
-      // Close the modal after a short delay
+
+      // Close modal after a delay
       setTimeout(() => {
         onClose();
-        resetForm();
+        setIsConfirmed(false);
       }, 2000);
-      
+
     } catch (error) {
-      console.error("Failed to book session:", error);
-      setIsPaymentSuccess(false);
+      console.error("Failed to create session:", error);
       toast({
-        title: "Booking Failed",
-        description: "There was an error booking your session. Please try again.",
+        title: "Session booking failed",
+        description: "There was an error booking this session. Please try again.",
         variant: "destructive",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
 
-  const goToPayment = () => {
-    if (!date) {
-      toast({
-        title: "Missing Date",
-        description: "Please select a date for your session.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!subject) {
-      toast({
-        title: "Missing Subject",
-        description: "Please select a subject for your session.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setStep(2);
-  };
-  
-  const goBackToDetails = () => {
-    setStep(1);
-  };
-
-  // Render different content based on the current step
-  if (isBookingSuccess) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="text-center">Booking Confirmed!</DialogTitle>
-            <DialogDescription className="text-center">
-              Your session with {student.fullName} has been scheduled.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-          </div>
-          <div className="space-y-3 text-center">
-            <p>
-              <span className="font-semibold">Student:</span> {student.fullName}
-            </p>
-            <p>
-              <span className="font-semibold">Date:</span> {date ? format(date, "PPP") : "Not selected"}
-            </p>
-            <p>
-              <span className="font-semibold">Time:</span> {startTime}
-            </p>
-            <p>
-              <span className="font-semibold">Subject:</span> {subject}
-            </p>
-            <p>
-              <span className="font-semibold">Duration:</span> {duration} minutes
-            </p>
-          </div>
-          <DialogFooter>
-            <Button onClick={onClose} className="w-full">
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  if (isPaymentSuccess) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="text-center">Payment Successful!</DialogTitle>
-            <DialogDescription className="text-center">
-              Your payment has been processed. Confirming your booking...
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-          </div>
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) {
-        onClose();
-        resetForm();
-      }
-    }}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {step === 1 ? "Book a Session" : "Payment Details"}
-          </DialogTitle>
+          <DialogTitle>Book a Session with {student.fullName}</DialogTitle>
           <DialogDescription>
-            {step === 1 
-              ? `Schedule a tutoring session with ${student.fullName}` 
-              : "Complete payment to confirm your booking"}
+            {isConfirmed 
+              ? "Your session request has been sent successfully!" 
+              : "Please select your preferred date, time, and session details."}
           </DialogDescription>
         </DialogHeader>
-        
-        {step === 1 ? (
-          // Step 1: Session details
+
+        {isConfirmed ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="h-16 w-16 bg-green-100 flex items-center justify-center rounded-full mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-center mb-2">Session Request Sent!</h3>
+            <p className="text-center text-gray-600 dark:text-gray-400">
+              Your session request has been sent to {student.fullName}.
+            </p>
+            <p className="text-center text-gray-600 dark:text-gray-400 mt-2">
+              They will need to confirm the session.
+            </p>
+          </div>
+        ) : (
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="subject" className="text-right">
-                Subject
-              </Label>
-              <Select 
-                value={subject} 
-                onValueChange={setSubject}
-              >
-                <SelectTrigger className="col-span-3">
+            <div>
+              <Label htmlFor="subject" className="mb-1 block">Subject</Label>
+              <Select onValueChange={setSubject} defaultValue={subject}>
+                <SelectTrigger id="subject">
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
-                  {student.subjects.map((sub) => (
-                    <SelectItem key={sub} value={sub}>
-                      {sub}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="Calculus">Calculus</SelectItem>
+                  <SelectItem value="Discrete Mathematics">Discrete Mathematics</SelectItem>
+                  <SelectItem value="Data Structures">Data Structures</SelectItem>
+                  <SelectItem value="Algorithms">Algorithms</SelectItem>
+                  <SelectItem value="Linear Algebra">Linear Algebra</SelectItem>
+                  <SelectItem value="Probability & Statistics">Probability & Statistics</SelectItem>
+                  <SelectItem value="Database Systems">Database Systems</SelectItem>
+                  <SelectItem value="Operating Systems">Operating Systems</SelectItem>
+                  <SelectItem value="Computer Networks">Computer Networks</SelectItem>
+                  <SelectItem value="Software Engineering">Software Engineering</SelectItem>
+                  <SelectItem value="Artificial Intelligence">Artificial Intelligence</SelectItem>
+                  <SelectItem value="Machine Learning">Machine Learning</SelectItem>
+                  <SelectItem value="Computer Graphics">Computer Graphics</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="sessionType" className="text-right">
-                Session Type
-              </Label>
-              <Select 
-                value={sessionType} 
-                onValueChange={setSessionType}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select type" />
+
+            <div>
+              <Label htmlFor="session-type" className="mb-1 block">Session Type</Label>
+              <Select onValueChange={setSessionType} defaultValue={sessionType}>
+                <SelectTrigger id="session-type">
+                  <SelectValue placeholder="Select session type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="One-on-One Tutoring">
-                    One-on-One Tutoring
-                  </SelectItem>
-                  <SelectItem value="Group Study">
-                    Group Study
-                  </SelectItem>
-                  <SelectItem value="Exam Preparation">
-                    Exam Preparation
-                  </SelectItem>
-                  <SelectItem value="Homework Help">
-                    Homework Help
-                  </SelectItem>
+                  <SelectItem value="One-on-One Tutoring">One-on-One Tutoring</SelectItem>
+                  <SelectItem value="Group Session">Group Session</SelectItem>
+                  <SelectItem value="Homework Help">Homework Help</SelectItem>
+                  <SelectItem value="Exam Preparation">Exam Preparation</SelectItem>
+                  <SelectItem value="Project Assistance">Project Assistance</SelectItem>
+                  <SelectItem value="Concept Clarification">Concept Clarification</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="date" className="text-right">
-                Date
-              </Label>
+
+            <div>
+              <Label htmlFor="date" className="mb-1 block">Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "col-span-3 text-left font-normal",
+                      "w-full justify-start text-left font-normal",
                       !date && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : "Select date"}
+                    {date ? format(date, "PPP") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={date}
@@ -402,182 +219,99 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
                 </PopoverContent>
               </Popover>
             </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="time" className="text-right">
-                Start Time
-              </Label>
-              <Select 
-                value={startTime} 
-                onValueChange={setStartTime}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[...Array(14)].map((_, i) => {
-                    const hour = 8 + i;
-                    const time = `${hour.toString().padStart(2, '0')}:00`;
-                    return (
-                      <SelectItem key={time} value={time}>
-                        {time}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="start-time" className="mb-1 block">Start Time</Label>
+                <Select onValueChange={setStartTime} defaultValue={startTime}>
+                  <SelectTrigger id="start-time">
+                    <SelectValue placeholder="Select start time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="09:00">9:00 AM</SelectItem>
+                    <SelectItem value="10:00">10:00 AM</SelectItem>
+                    <SelectItem value="11:00">11:00 AM</SelectItem>
+                    <SelectItem value="12:00">12:00 PM</SelectItem>
+                    <SelectItem value="13:00">1:00 PM</SelectItem>
+                    <SelectItem value="14:00">2:00 PM</SelectItem>
+                    <SelectItem value="15:00">3:00 PM</SelectItem>
+                    <SelectItem value="16:00">4:00 PM</SelectItem>
+                    <SelectItem value="17:00">5:00 PM</SelectItem>
+                    <SelectItem value="18:00">6:00 PM</SelectItem>
+                    <SelectItem value="19:00">7:00 PM</SelectItem>
+                    <SelectItem value="20:00">8:00 PM</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="duration" className="mb-1 block">Duration</Label>
+                <Select onValueChange={setDuration} defaultValue={duration}>
+                  <SelectTrigger id="duration">
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="60">1 hour</SelectItem>
+                    <SelectItem value="90">1.5 hours</SelectItem>
+                    <SelectItem value="120">2 hours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="duration" className="text-right">
-                Duration
-              </Label>
-              <Select 
-                value={duration} 
-                onValueChange={setDuration}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="30">30 minutes</SelectItem>
-                  <SelectItem value="60">1 hour</SelectItem>
-                  <SelectItem value="90">1.5 hours</SelectItem>
-                  <SelectItem value="120">2 hours</SelectItem>
-                </SelectContent>
-              </Select>
+
+            <div>
+              <Label htmlFor="hourly-rate" className="mb-1 block">Hourly Rate (Rs.)</Label>
+              <Input
+                id="hourly-rate"
+                type="number"
+                min="500"
+                step="100"
+                value={hourlyRate}
+                onChange={(e) => setHourlyRate(parseInt(e.target.value) || 0)}
+              />
             </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Notes
-              </Label>
+
+            <div>
+              <Label htmlFor="description" className="mb-1 block">Topic/Description</Label>
               <Textarea
                 id="description"
-                placeholder="Add details about what you want to cover in this session"
-                className="col-span-3"
+                placeholder="Describe what you'll help with..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                rows={3}
               />
             </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <div className="text-right"></div>
-              <div className="col-span-3 font-medium">
-                Total: Rs. {totalAmount.toFixed(2)}
+
+            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Session Rate:</span>
+                <span className="font-medium">Rs. {hourlyRate} / hour</span>
               </div>
-            </div>
-          </div>
-        ) : (
-          // Step 2: Payment details
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="payment-method" className="text-right">
-                Payment Method
-              </Label>
-              <div className="col-span-3">
-                <RadioGroup 
-                  defaultValue="easypaisa" 
-                  value={paymentMethod}
-                  onValueChange={setPaymentMethod}
-                  className="flex flex-col space-y-1"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="easypaisa" id="easypaisa" />
-                    <Label htmlFor="easypaisa" className="flex items-center cursor-pointer">
-                      <div className="w-6 h-6 mr-2 bg-green-500 rounded-sm flex items-center justify-center text-white text-xs font-bold">EP</div>
-                      Easypaisa
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="jazzcash" id="jazzcash" />
-                    <Label htmlFor="jazzcash" className="flex items-center cursor-pointer">
-                      <div className="w-6 h-6 mr-2 bg-red-500 rounded-sm flex items-center justify-center text-white text-xs font-bold">JC</div>
-                      JazzCash
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="phone" className="text-right">
-                Phone Number
-              </Label>
-              <Input
-                id="phone"
-                placeholder="03XX XXXXXXX"
-                className="col-span-3"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <div className="text-right"></div>
-              <div className="col-span-3">
-                <div className="text-sm text-muted-foreground mb-2">
-                  Booking Summary:
-                </div>
-                <div className="bg-muted p-3 rounded-md">
-                  <div className="flex justify-between py-1">
-                    <span>Student:</span>
-                    <span className="font-medium">{student.fullName}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Subject:</span>
-                    <span className="font-medium">{subject}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Date:</span>
-                    <span className="font-medium">{date ? format(date, "PPP") : "Not selected"}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Time:</span>
-                    <span className="font-medium">{startTime}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Duration:</span>
-                    <span className="font-medium">{duration} minutes</span>
-                  </div>
-                  <div className="border-t border-border mt-2 pt-2 flex justify-between font-medium">
-                    <span>Total:</span>
-                    <span>Rs. {totalAmount.toFixed(2)}</span>
-                  </div>
-                </div>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Estimated Total:</span>
+                <span className="font-bold text-lg">Rs. {totalAmount}</span>
               </div>
             </div>
           </div>
         )}
-        
+
         <DialogFooter>
-          {step === 1 ? (
-            <Button onClick={goToPayment}>
-              Proceed to Payment
-            </Button>
-          ) : (
-            <div className="flex w-full gap-2">
-              <Button 
-                variant="outline" 
-                onClick={goBackToDetails} 
-                disabled={isSubmitting}
-              >
-                Back
+          {!isConfirmed && (
+            <>
+              <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+                Cancel
               </Button>
-              <Button 
-                onClick={handleSubmit} 
-                disabled={isSubmitting || !phoneNumber} 
-                className="flex-1"
-              >
+              <Button onClick={handleSubmit} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <span className="animate-spin mr-2">⟳</span> Processing...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
                   </>
                 ) : (
-                  "Confirm Booking"
+                  "Request Session"
                 )}
               </Button>
-            </div>
+            </>
           )}
         </DialogFooter>
       </DialogContent>
