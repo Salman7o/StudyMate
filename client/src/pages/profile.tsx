@@ -65,6 +65,22 @@ export default function Profile() {
       });
     }
   }, [tutorProfile]);
+  
+  // Update form data when user data changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        fullName: user.fullName || "",
+        email: user.email || "",
+        phoneNumber: user.phoneNumber || "",
+        location: user.location || "",
+        bio: user.bio || "",
+        program: user.program || "",
+        semester: user.semester || "",
+        university: user.university || "University",
+      });
+    }
+  }, [user]);
 
   // Get payment methods
   const { data: paymentMethods = [] } = useQuery({
