@@ -27,6 +27,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface TutorBookingModalProps {
   isOpen: boolean;
@@ -49,8 +50,11 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
   const [duration, setDuration] = useState("60");
   const [description, setDescription] = useState("");
   const [subject, setSubject] = useState("Calculus");
+  const [paymentMethod, setPaymentMethod] = useState("easypaisa");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isConfirmed, setIsConfirmed] = useState(false);
+  const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
+  const [step, setStep] = useState(1); // Step 1: Session details, Step 2: Payment
 
   // Tutors should set their own hourly rate when booking a student
   const [hourlyRate, setHourlyRate] = useState(1000);
@@ -58,11 +62,27 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
   const durationInHours = parseInt(duration) / 60;
   const totalAmount = hourlyRate * durationInHours;
 
+  const handleContinue = () => {
+    if (!date || !subject) {
+      toast({
+        title: "Missing information",
+        description: "Please fill out all required fields before continuing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setStep(2);
+  };
+
+  const handleBack = () => {
+    setStep(1);
+  };
+
   const handleSubmit = async () => {
-    if (!user || !date) {
+    if (!user || !date || !phoneNumber) {
       toast({
         title: "Missing information", 
-        description: "Please fill in all required fields.",
+        description: "Please enter a phone number for payment.",
         variant: "destructive"
       });
       return;
@@ -71,7 +91,13 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
     try {
       setIsSubmitting(true);
 
-      // Create session directly (without payment step)
+      // Show payment success immediately (simulated payment)
+      setIsPaymentSuccess(true);
+
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Create session with confirmed status
       const startDateTime = new Date(date);
       const [hours, minutes] = startTime.split(':');
       startDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -86,29 +112,36 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
         duration: parseInt(duration),
         totalAmount: totalAmount,
         description: description,
+        paymentMethod: paymentMethod,
         status: "pending",
+        paymentStatus: "paid"
       };
 
       console.log("Creating session with data:", sessionData);
       
       await apiRequest("POST", "/api/sessions", sessionData);
 
-      // Show confirmation and update UI
-      setIsConfirmed(true);
+      // Show payment success message
+      toast({
+        title: "Payment Successful!",
+        description: "Your payment has been processed.",
+      });
+
+      // Show booking confirmation after payment success
+      setTimeout(() => {
+        toast({
+          title: "Booking Confirmed!",
+          description: "Your session has been booked successfully.",
+        });
+      }, 1000);
       
       // Invalidate sessions cache to refresh the list
       queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
 
-      // Show confirmation message
-      toast({
-        title: "Session Request Sent",
-        description: `You've requested a session with ${student.fullName}. They will need to confirm the booking.`,
-      });
-
-      // Close modal after a delay
+      // Close modal and redirect after messages are shown
       setTimeout(() => {
         onClose();
-        setIsConfirmed(false);
+        window.location.href = '/my-sessions';
       }, 2000);
 
     } catch (error) {
@@ -129,28 +162,15 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
         <DialogHeader>
           <DialogTitle>Book a Session with {student.fullName}</DialogTitle>
           <DialogDescription>
-            {isConfirmed 
-              ? "Your session request has been sent successfully!" 
-              : "Please select your preferred date, time, and session details."}
+            {step === 1 
+              ? "Please select your preferred date, time, and session details."
+              : isPaymentSuccess 
+                ? "Payment successful!" 
+                : "Complete payment to confirm your booking."}
           </DialogDescription>
         </DialogHeader>
 
-        {isConfirmed ? (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="h-16 w-16 bg-green-100 flex items-center justify-center rounded-full mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold text-center mb-2">Session Request Sent!</h3>
-            <p className="text-center text-gray-600 dark:text-gray-400">
-              Your session request has been sent to {student.fullName}.
-            </p>
-            <p className="text-center text-gray-600 dark:text-gray-400 mt-2">
-              They will need to confirm the session.
-            </p>
-          </div>
-        ) : (
+        {step === 1 ? (
           <div className="grid gap-4 py-4">
             <div>
               <Label htmlFor="subject" className="mb-1 block">Subject</Label>
@@ -293,26 +313,121 @@ export function TutorBookingModal({ isOpen, onClose, student }: TutorBookingModa
               </div>
             </div>
           </div>
+        ) : (
+          <div className="grid gap-4 py-4">
+            {isPaymentSuccess ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="h-16 w-16 bg-green-100 flex items-center justify-center rounded-full mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-center mb-2">Payment Successful!</h3>
+                <p className="text-center text-gray-600 dark:text-gray-400 mb-2">
+                  Your payment of Rs. {totalAmount} has been processed successfully.
+                </p>
+                <p className="text-center text-gray-600 dark:text-gray-400">
+                  Your session booking is being confirmed...
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-2">
+                  <h3 className="font-medium text-lg mb-2">Payment Method</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Please select your preferred payment method. You will be contacted with further instructions.
+                  </p>
+
+                  <RadioGroup defaultValue={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                    <div className="flex items-center space-x-2 border p-3 rounded-md">
+                      <RadioGroupItem value="easypaisa" id="easypaisa" />
+                      <Label htmlFor="easypaisa" className="flex items-center">
+                        <div className="h-8 w-8 flex items-center justify-center bg-green-500 rounded-full mr-2">
+                          <i className="fas fa-mobile-alt text-white"></i>
+                        </div>
+                        <span>EasyPaisa</span>
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2 border p-3 rounded-md">
+                      <RadioGroupItem value="jazzcash" id="jazzcash" />
+                      <Label htmlFor="jazzcash" className="flex items-center">
+                        <div className="h-8 w-8 flex items-center justify-center bg-red-500 rounded-full mr-2">
+                          <i className="fas fa-wallet text-white"></i>
+                        </div>
+                        <span>JazzCash</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div>
+                  <Label htmlFor="phone" className="mb-1 block">Phone Number</Label>
+                  <Input 
+                    id="phone" 
+                    placeholder="Enter your mobile number" 
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    This number will be used for the {paymentMethod === 'easypaisa' ? 'EasyPaisa' : 'JazzCash'} transaction.
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
+                  <h4 className="font-medium mb-2">Booking Summary</h4>
+                  <div className="grid grid-cols-2 gap-1 text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Subject:</span>
+                    <span className="font-medium">{subject}</span>
+
+                    <span className="text-gray-600 dark:text-gray-400">Session Type:</span>
+                    <span className="font-medium">{sessionType}</span>
+
+                    <span className="text-gray-600 dark:text-gray-400">Date & Time:</span>
+                    <span className="font-medium">
+                      {date ? format(date, "PPP") : ''} at {startTime.includes(':') ? 
+                        parseInt(startTime.split(':')[0]) > 12 
+                          ? `${parseInt(startTime.split(':')[0]) - 12}:${startTime.split(':')[1]} PM` 
+                          : `${startTime} AM`
+                        : startTime}
+                    </span>
+
+                    <span className="text-gray-600 dark:text-gray-400">Duration:</span>
+                    <span className="font-medium">
+                      {parseInt(duration) < 60 
+                        ? `${duration} minutes` 
+                        : `${Math.floor(parseInt(duration) / 60)} hour${parseInt(duration) > 60 ? 's' : ''} ${parseInt(duration) % 60 ? `${parseInt(duration) % 60} minutes` : ''}`}
+                    </span>
+
+                    <span className="text-gray-600 dark:text-gray-400">Total Amount:</span>
+                    <span className="font-medium">Rs. {totalAmount}</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         )}
 
         <DialogFooter>
-          {!isConfirmed && (
+          {step === 1 ? (
+            <Button onClick={handleContinue}>Continue to Payment</Button>
+          ) : !isPaymentSuccess ? (
             <>
-              <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-                Cancel
+              <Button variant="outline" onClick={handleBack} className="mr-2">
+                Back
               </Button>
               <Button onClick={handleSubmit} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
+                    Processing...
                   </>
                 ) : (
-                  "Request Session"
+                  "Confirm Payment"
                 )}
               </Button>
             </>
-          )}
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>
