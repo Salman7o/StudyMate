@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -35,9 +35,8 @@ interface StudentBookingModalProps {
   student: {
     id: number;
     fullName: string;
-    program: string;
-    semester: string;
-    subjects: string[];
+    program?: string;
+    semester?: string;
   };
 }
 
@@ -50,39 +49,15 @@ export function StudentBookingModal({ isOpen, onClose, student }: StudentBooking
   const [startTime, setStartTime] = useState("14:00");
   const [duration, setDuration] = useState("60");
   const [description, setDescription] = useState("");
-  const [subject, setSubject] = useState(student.subjects[0] || "");
+  const [subject, setSubject] = useState("Calculus");
   const [paymentMethod, setPaymentMethod] = useState("easypaisa");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [step, setStep] = useState(1); // Step 1: Session details, Step 2: Payment
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hourlyRate, setHourlyRate] = useState(1000); // Default hourly rate
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
 
-  // Get the tutor's hourly rate from their profile
-  useState(() => {
-    if (user?.id) {
-      const fetchTutorRate = async () => {
-        try {
-          const response = await fetch(`/api/tutors/profile/${user.id}`, {
-            credentials: "include",
-          });
-          if (response.ok) {
-            const profile = await response.json();
-            if (profile && profile.hourlyRate) {
-              setHourlyRate(profile.hourlyRate);
-            }
-          }
-        } catch (error) {
-          console.error("Failed to fetch tutor rate:", error);
-        }
-      };
-
-      fetchTutorRate();
-    }
-  });
-
-  const durationInHours = parseInt(duration) / 60;
-  const totalAmount = hourlyRate * durationInHours;
+  // Students requesting help from other students might set a budget
+  const [budget, setBudget] = useState(800);
 
   const handleContinue = () => {
     if (!date || !subject) {
@@ -112,65 +87,34 @@ export function StudentBookingModal({ isOpen, onClose, student }: StudentBooking
 
     try {
       setIsSubmitting(true);
-      
-      // Show payment processing simulation
-      toast({
-        title: "Processing Payment...",
-        description: "Please wait while we process your payment.",
-      });
 
-      // Simulate payment processing delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       // Show payment success immediately (simulated payment)
       setIsPaymentSuccess(true);
-      
-      // Show payment success toast
-      toast({
-        title: "Payment Successful!",
-        description: "Your payment has been processed successfully.",
-        variant: "default",
-      });
 
-      // Simulate a short delay before API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log("Student booking with tutor ID:", user.id, "and student ID:", student.id);
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // Format session data to exactly match the schema requirements
+      // Create session with confirmed status
+      const startDateTime = new Date(date);
+      const [hours, minutes] = startTime.split(':');
+      startDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
       const sessionData = {
-        studentId: Number(student.id),
-        tutorId: Number(user.id),
-        subject: subject || "General Tutoring", // Default value if empty
-        sessionType: sessionType || "online", // Default value if empty
-        date: date.toISOString(), // ISO string for proper date handling
-        startTime: startTime || "09:00", // Default if empty
-        duration: parseInt(duration) || 60, // Default if parsing fails
-        totalAmount: Math.round(totalAmount) || 1000, // Default if calculation fails
-        description: description || "",
-        status: "pending", // Start as pending for proper workflow simulation
+        studentId: user.id,
+        tutorId: student.id, // Assuming this is a student to student booking
+        subject: subject,
+        sessionType: sessionType,
+        date: startDateTime.toISOString(),
+        startTime: startTime,
+        duration: parseInt(duration),
+        totalAmount: budget,
+        description: description,
+        paymentMethod: paymentMethod,
+        status: "upcoming",
+        paymentStatus: "paid"
       };
-      
-      console.log("Submitting booking data:", sessionData);
-      
-      const response = await apiRequest("POST", "/api/sessions", sessionData);
-      
-      if (!response.ok) {
-        try {
-          const errorData = await response.json();
-          console.error("Error from server:", errorData);
-          throw new Error(errorData?.message || "Failed to create session");
-        } catch (parseError) {
-          console.error("Error parsing server response:", parseError);
-          throw new Error("Failed to create session. Please try again.");
-        }
-      }
-      
-      const result = await response.json().catch(() => {
-        console.error("Error parsing session response");
-        return { id: "unknown" };
-      });
-      console.log("Session created successfully:", result);
+
+      await apiRequest("POST", "/api/sessions", sessionData);
 
       // Show payment success message
       toast({
@@ -194,14 +138,14 @@ export function StudentBookingModal({ isOpen, onClose, student }: StudentBooking
         onClose();
         window.location.href = '/my-sessions';
       }, 2000);
+
     } catch (error) {
-      console.error("Failed to book session:", error);
+      console.error("Failed to process payment:", error);
       toast({
-        title: "Booking failed",
-        description: "There was an error booking your session. Please try again.",
+        title: "Payment failed",
+        description: "There was an error processing your payment. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -210,7 +154,7 @@ export function StudentBookingModal({ isOpen, onClose, student }: StudentBooking
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Book a Session with {student.fullName}</DialogTitle>
+          <DialogTitle>Book a Study Session with {student.fullName}</DialogTitle>
           <DialogDescription>
             {step === 1 
               ? "Please select your preferred date, time, and session details."
@@ -227,9 +171,19 @@ export function StudentBookingModal({ isOpen, onClose, student }: StudentBooking
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
-                  {student.subjects?.map((subj) => (
-                    <SelectItem key={subj} value={subj}>{subj}</SelectItem>
-                  ))}
+                  <SelectItem value="Calculus">Calculus</SelectItem>
+                  <SelectItem value="Discrete Mathematics">Discrete Mathematics</SelectItem>
+                  <SelectItem value="Data Structures">Data Structures</SelectItem>
+                  <SelectItem value="Algorithms">Algorithms</SelectItem>
+                  <SelectItem value="Linear Algebra">Linear Algebra</SelectItem>
+                  <SelectItem value="Probability & Statistics">Probability & Statistics</SelectItem>
+                  <SelectItem value="Database Systems">Database Systems</SelectItem>
+                  <SelectItem value="Operating Systems">Operating Systems</SelectItem>
+                  <SelectItem value="Computer Networks">Computer Networks</SelectItem>
+                  <SelectItem value="Software Engineering">Software Engineering</SelectItem>
+                  <SelectItem value="Artificial Intelligence">Artificial Intelligence</SelectItem>
+                  <SelectItem value="Machine Learning">Machine Learning</SelectItem>
+                  <SelectItem value="Computer Graphics">Computer Graphics</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -318,10 +272,22 @@ export function StudentBookingModal({ isOpen, onClose, student }: StudentBooking
             </div>
 
             <div>
+              <Label htmlFor="budget" className="mb-1 block">Your Budget (Rs.)</Label>
+              <Input
+                id="budget"
+                type="number"
+                min="500"
+                step="100"
+                value={budget}
+                onChange={(e) => setBudget(parseInt(e.target.value) || 0)}
+              />
+            </div>
+
+            <div>
               <Label htmlFor="description" className="mb-1 block">Topic/Description</Label>
               <Textarea
                 id="description"
-                placeholder="Describe what you'll be teaching..."
+                placeholder="Describe what you need help with..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
@@ -330,107 +296,126 @@ export function StudentBookingModal({ isOpen, onClose, student }: StudentBooking
 
             <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Session Rate:</span>
-                <span className="font-medium">Rs. {hourlyRate} / hour</span>
-              </div>
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Estimated Total:</span>
-                <span className="font-bold text-lg">Rs. {totalAmount}</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Your Budget:</span>
+                <span className="font-medium">Rs. {budget}</span>
               </div>
             </div>
           </div>
         ) : (
           <div className="grid gap-4 py-4">
-            <div className="mb-2">
-              <h3 className="font-medium text-lg mb-2">Payment Method</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                Please select your preferred payment method. You will receive payment instructions after the session is confirmed.
-              </p>
-
-              <RadioGroup defaultValue={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-                <div className="flex items-center space-x-2 border p-3 rounded-md">
-                  <RadioGroupItem value="easypaisa" id="easypaisa" />
-                  <Label htmlFor="easypaisa" className="flex items-center">
-                    <div className="h-8 w-8 flex items-center justify-center bg-green-500 rounded-full mr-2">
-                      <i className="fas fa-mobile-alt text-white"></i>
-                    </div>
-                    <span>EasyPaisa</span>
-                  </Label>
+            {isPaymentSuccess ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="h-16 w-16 bg-green-100 flex items-center justify-center rounded-full mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
                 </div>
-
-                <div className="flex items-center space-x-2 border p-3 rounded-md">
-                  <RadioGroupItem value="jazzcash" id="jazzcash" />
-                  <Label htmlFor="jazzcash" className="flex items-center">
-                    <div className="h-8 w-8 flex items-center justify-center bg-red-500 rounded-full mr-2">
-                      <i className="fas fa-wallet text-white"></i>
-                    </div>
-                    <span>JazzCash</span>
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            <div>
-              <Label htmlFor="phone" className="mb-1 block">Phone Number</Label>
-              <Input 
-                id="phone" 
-                placeholder="Enter your mobile number" 
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                This number will be used for the {paymentMethod === 'easypaisa' ? 'EasyPaisa' : 'JazzCash'} transaction.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
-              <h4 className="font-medium mb-2">Booking Summary</h4>
-              <div className="grid grid-cols-2 gap-1 text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Subject:</span>
-                <span className="font-medium">{subject}</span>
-
-                <span className="text-gray-600 dark:text-gray-400">Session Type:</span>
-                <span className="font-medium">{sessionType}</span>
-
-                <span className="text-gray-600 dark:text-gray-400">Date & Time:</span>
-                <span className="font-medium">
-                  {date ? format(date, "PPP") : ''} at {startTime.includes(':') ? 
-                    parseInt(startTime) > 12 ? 
-                      `${parseInt(startTime) - 12}:${startTime.split(':')[1]} PM` : 
-                      `${startTime} AM` : 
-                    startTime}
-                </span>
-
-                <span className="text-gray-600 dark:text-gray-400">Duration:</span>
-                <span className="font-medium">{parseInt(duration) / 60} hour(s)</span>
-
-                <span className="text-gray-600 dark:text-gray-400 col-span-2 mt-2 border-t pt-2">Total Payment:</span>
-                <span className="font-bold text-lg col-span-2 text-primary">Rs. {totalAmount}</span>
+                <h3 className="text-xl font-bold text-center mb-2">Payment Successful!</h3>
+                <p className="text-center text-gray-600 dark:text-gray-400 mb-2">
+                  Your payment of Rs. {budget} has been processed successfully.
+                </p>
+                <p className="text-center text-gray-600 dark:text-gray-400">
+                  Your session booking is being confirmed...
+                </p>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="mb-2">
+                  <h3 className="font-medium text-lg mb-2">Payment Method</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Please select your preferred payment method. You will be contacted with further instructions.
+                  </p>
+
+                  <RadioGroup defaultValue={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                    <div className="flex items-center space-x-2 border p-3 rounded-md">
+                      <RadioGroupItem value="easypaisa" id="easypaisa" />
+                      <Label htmlFor="easypaisa" className="flex items-center">
+                        <div className="h-8 w-8 flex items-center justify-center bg-green-500 rounded-full mr-2">
+                          <i className="fas fa-mobile-alt text-white"></i>
+                        </div>
+                        <span>EasyPaisa</span>
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2 border p-3 rounded-md">
+                      <RadioGroupItem value="jazzcash" id="jazzcash" />
+                      <Label htmlFor="jazzcash" className="flex items-center">
+                        <div className="h-8 w-8 flex items-center justify-center bg-red-500 rounded-full mr-2">
+                          <i className="fas fa-wallet text-white"></i>
+                        </div>
+                        <span>JazzCash</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div>
+                  <Label htmlFor="phone" className="mb-1 block">Phone Number</Label>
+                  <Input 
+                    id="phone" 
+                    placeholder="Enter your mobile number" 
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    This number will be used for the {paymentMethod === 'easypaisa' ? 'EasyPaisa' : 'JazzCash'} transaction.
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
+                  <h4 className="font-medium mb-2">Booking Summary</h4>
+                  <div className="grid grid-cols-2 gap-1 text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Subject:</span>
+                    <span className="font-medium">{subject}</span>
+
+                    <span className="text-gray-600 dark:text-gray-400">Session Type:</span>
+                    <span className="font-medium">{sessionType}</span>
+
+                    <span className="text-gray-600 dark:text-gray-400">Date & Time:</span>
+                    <span className="font-medium">
+                      {date ? format(date, "PPP") : ''} at {startTime.includes(':') ? 
+                        parseInt(startTime.split(':')[0]) > 12 
+                          ? `${parseInt(startTime.split(':')[0]) - 12}:${startTime.split(':')[1]} PM` 
+                          : `${startTime} AM`
+                        : startTime}
+                    </span>
+
+                    <span className="text-gray-600 dark:text-gray-400">Duration:</span>
+                    <span className="font-medium">
+                      {parseInt(duration) < 60 
+                        ? `${duration} minutes` 
+                        : `${Math.floor(parseInt(duration) / 60)} hour${parseInt(duration) > 60 ? 's' : ''} ${parseInt(duration) % 60 ? `${parseInt(duration) % 60} minutes` : ''}`}
+                    </span>
+
+                    <span className="text-gray-600 dark:text-gray-400">Total Amount:</span>
+                    <span className="font-medium">Rs. {budget}</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
         <DialogFooter>
           {step === 1 ? (
+            <Button onClick={handleContinue}>Continue to Payment</Button>
+          ) : !isPaymentSuccess ? (
             <>
-              <Button variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button onClick={handleContinue}>
-                Continue to Payment
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" onClick={handleBack}>
+              <Button variant="outline" onClick={handleBack} className="mr-2">
                 Back
               </Button>
               <Button onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? "Processing..." : "Confirm Booking"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Confirm Payment"
+                )}
               </Button>
             </>
-          )}
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>
