@@ -9,7 +9,7 @@ export default function Home() {
     <div className="py-12">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-indigo-400 text-transparent bg-clip-text">
-          StudyMate - Find Your Perfect Tutor Match
+          StudyMate - Your Smart Study Partner
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
           Connect with qualified student tutors for personalized learning
