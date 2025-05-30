@@ -244,8 +244,8 @@ export class MemStorage implements IStorage {
     });
 
     // Create tutor profiles
-    this.createTutorProfile({
-      userId: sarah.id,
+    await this.createTutorProfile({
+      userId: (await sarah).id,
       subjects: ["Calculus", "Linear Algebra"],
       hourlyRate: 800,
       experience: "3 years",
@@ -255,8 +255,8 @@ export class MemStorage implements IStorage {
       reviewCount: 24
     });
 
-    this.createTutorProfile({
-      userId: michael.id,
+    await this.createTutorProfile({
+      userId: (await michael).id,
       subjects: ["Programming", "Data Structures"],
       hourlyRate: 950,
       experience: "2 years",

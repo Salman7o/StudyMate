@@ -13,6 +13,7 @@ import {
   insertMessageSchema,
   insertConversationSchema
 } from "@shared/schema";
+import { notificationService } from "./notifications";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
@@ -879,6 +880,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update payment method default error:", error);
       return res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Notifications routes
+  app.post('/api/notifications/register-device', isAuthenticated, async (req: any, res) => {
+    try {
+      const { deviceToken } = req.body;
+      
+      if (!deviceToken) {
+        return res.status(400).json({ message: 'Device token is required' });
+      }
+
+      const userId = req.user.id;
+      await notificationService.storeUserDeviceToken(userId, deviceToken);
+      
+      res.json({ message: 'Device token registered successfully' });
+    } catch (error) {
+      console.error('Error registering device token:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
 
