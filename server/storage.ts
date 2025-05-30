@@ -113,14 +113,14 @@ export class MemStorage implements IStorage {
     });
     
     // Initialize with some data
-    this.initializeData();
+    this.initializeData().catch(console.error);
   }
 
-  private initializeData() {
+  private async initializeData() {
     // Initialize with some test data for development
     
     // Create a john user for the sessions and conversations
-    const john = this.createUser({
+    const john = await this.createUser({
       username: "john",
       password: "$2b$10$VGqMIj6TjlTiV05vLlIwKOZw4BpWCePKvBrJ/JZ6XqEqWgNSXcW4G",
       email: "john@example.com",
@@ -136,7 +136,7 @@ export class MemStorage implements IStorage {
       availability: "Weekends and evenings"
     });
     
-    const zain = this.createUser({
+    const zain = await this.createUser({
       username: "zainahmed",
       password: "$2b$10$VGqMIj6TjlTiV05vLlIwKOZw4BpWCePKvBrJ/JZ6XqEqWgNSXcW4G",
       email: "zain.ahmed@example.com",
@@ -153,7 +153,7 @@ export class MemStorage implements IStorage {
     });
     
     // Add students that match with all tutors (for testing)
-    const ali = this.createUser({
+    const ali = await this.createUser({
       username: "aliraza",
       password: "$2b$10$VGqMIj6TjlTiV05vLlIwKOZw4BpWCePKvBrJ/JZ6XqEqWgNSXcW4G",
       email: "ali.raza@example.com",
@@ -169,7 +169,7 @@ export class MemStorage implements IStorage {
       availability: "Evenings and weekends"
     });
     
-    const sara = this.createUser({
+    const sara = await this.createUser({
       username: "sarakhan",
       password: "$2b$10$VGqMIj6TjlTiV05vLlIwKOZw4BpWCePKvBrJ/JZ6XqEqWgNSXcW4G",
       email: "sara.khan@example.com",
