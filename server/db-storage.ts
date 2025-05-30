@@ -232,6 +232,11 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async getAllSessions(): Promise<Session[]> {
+    const allSessions = await db.select().from(sessions);
+    return allSessions;
+  }
+
   async getSessionsByStudent(studentId: number): Promise<Session[]> {
     return await db.select().from(sessions).where(eq(sessions.studentId, studentId));
   }

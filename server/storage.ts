@@ -41,6 +41,7 @@ export interface IStorage {
   
   // Session related methods
   getSession(id: number): Promise<Session | undefined>;
+  getAllSessions(): Promise<Session[]>;
   getSessionsByStudent(studentId: number): Promise<Session[]>;
   getSessionsByTutor(tutorId: number): Promise<Session[]>;
   createSession(session: InsertSession): Promise<Session>;
