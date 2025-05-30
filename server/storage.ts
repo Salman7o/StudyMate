@@ -185,7 +185,7 @@ export class MemStorage implements IStorage {
       availability: "Monday to Friday, 2PM-6PM"
     });
     
-    const hasan = this.createUser({
+    const hasan = await this.createUser({
       username: "hasanali",
       password: "$2b$10$VGqMIj6TjlTiV05vLlIwKOZw4BpWCePKvBrJ/JZ6XqEqWgNSXcW4G",
       email: "hasan.ali@example.com",
@@ -201,7 +201,7 @@ export class MemStorage implements IStorage {
       availability: "Tuesday, Wednesday, Saturday 10AM-6PM"
     });
 
-    const sarah = this.createUser({
+    const sarah = await this.createUser({
       username: "sarahjohnson",
       password: "$2b$10$VGqMIj6TjlTiV05vLlIwKOZw4BpWCePKvBrJ/JZ6XqEqWgNSXcW4G",
       email: "sarah.johnson@example.com",
@@ -215,7 +215,7 @@ export class MemStorage implements IStorage {
       location: "Karachi, Pakistan"
     });
 
-    const michael = this.createUser({
+    const michael = await this.createUser({
       username: "michaelchen",
       password: "$2b$10$VGqMIj6TjlTiV05vLlIwKOZw4BpWCePKvBrJ/JZ6XqEqWgNSXcW4G",
       email: "michael.chen@example.com",
@@ -229,7 +229,7 @@ export class MemStorage implements IStorage {
       location: "Islamabad, Pakistan"
     });
 
-    const aisha = this.createUser({
+    const aisha = await this.createUser({
       username: "aishapatel",
       password: "$2b$10$VGqMIj6TjlTiV05vLlIwKOZw4BpWCePKvBrJ/JZ6XqEqWgNSXcW4G",
       email: "aisha.patel@example.com",
@@ -245,7 +245,7 @@ export class MemStorage implements IStorage {
 
     // Create tutor profiles
     await this.createTutorProfile({
-      userId: (await sarah).id,
+      userId: sarah.id,
       subjects: ["Calculus", "Linear Algebra"],
       hourlyRate: 800,
       experience: "3 years",

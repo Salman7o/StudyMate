@@ -1,15 +1,28 @@
 import { storage } from "./storage";
 import * as admin from "firebase-admin";
 
-// Initialize Firebase Admin SDK
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  });
+// Initialize Firebase Admin SDK with error handling
+let firebaseInitialized = false;
+try {
+  if (!admin.apps || !admin.apps.length) {
+    if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        }),
+      });
+      firebaseInitialized = true;
+    } else {
+      console.warn('Firebase credentials not found. Push notifications will be disabled.');
+    }
+  } else {
+    firebaseInitialized = true;
+  }
+} catch (error) {
+  console.error('Failed to initialize Firebase:', error);
+  firebaseInitialized = false;
 }
 
 interface NotificationPayload {
