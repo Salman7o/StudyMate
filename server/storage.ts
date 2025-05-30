@@ -686,6 +686,10 @@ export class MemStorage implements IStorage {
     return this.sessions.get(id);
   }
 
+  async getAllSessions(): Promise<Session[]> {
+    return Array.from(this.sessions.values());
+  }
+
   async getSessionsByStudent(studentId: number): Promise<Session[]> {
     return Array.from(this.sessions.values()).filter(
       (session) => session.studentId === studentId

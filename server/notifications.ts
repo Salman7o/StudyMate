@@ -21,6 +21,7 @@ interface NotificationPayload {
 }
 
 export class NotificationService {
+  private deviceTokens: Map<number, string> = new Map();
   
   // Check for upcoming sessions that need reminders
   async checkSessionReminders() {
@@ -45,8 +46,8 @@ export class NotificationService {
       const allSessions = await storage.getAllSessions();
       
       // Filter sessions that start within the next 15-20 minutes and are confirmed
-      const upcomingSessions = allSessions.filter(session => {
-        if (session.status !== 'confirmed' && session.status !== 'upcoming') {
+      const upcomingSessions = allSessions.filter((session: any) => {
+        if (session.status !== 'confirmed') {
           return false;
         }
         
@@ -138,7 +139,7 @@ export class NotificationService {
       const response = await admin.messaging().send(message);
       console.log('Successfully sent notification:', response);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending push notification:', error);
       
       // Handle invalid token errors
@@ -152,14 +153,30 @@ export class NotificationService {
 
   // Store device tokens when users log in
   async storeUserDeviceToken(userId: number, deviceToken: string) {
-    // You would implement this to store device tokens in your database
-    console.log(`Storing device token for user ${userId}`);
+    try {
+      this.deviceTokens.set(userId, deviceToken);
+      console.log(`Stored device token for user ${userId}`);
+    } catch (error) {
+      console.error('Error storing device token:', error);
+    }
   }
 
   private async getUserDeviceToken(userId: number): Promise<string> {
-    // You would implement this to retrieve stored device tokens
-    console.log(`Getting device token for user ${userId}`);
-    return '';
+    try {
+      return this.deviceTokens.get(userId) || '';
+    } catch (error) {
+      console.error('Error getting device token:', error);
+      return '';
+    }
+  }
+
+  async removeUserDeviceToken(userId: number) {
+    try {
+      this.deviceTokens.delete(userId);
+      console.log(`Removed device token for user ${userId}`);
+    } catch (error) {
+      console.error('Error removing device token:', error);
+    }
   }
 
   // Start the reminder checker (runs every minute)
