@@ -31,6 +31,24 @@
    FIREBASE_PRIVATE_KEY=your_firebase_private_key
    ```
 
+   **How to get these credentials:**
+   
+   **For PostgreSQL:**
+   - Install PostgreSQL locally or use a cloud service (Neon, Supabase, etc.)
+   - Format: `postgresql://username:password@host:port/database`
+   - Example: `postgresql://myuser:mypassword@localhost:5432/studybuddy`
+   
+   **For Firebase (optional):**
+   - Go to [Firebase Console](https://console.firebase.google.com)
+   - Create a new project or select existing one
+   - Go to Project Settings > Service Accounts
+   - Generate new private key (downloads JSON file)
+   - Copy the values from the JSON file to your .env
+   
+   **Session Secret:**
+   - Generate a random string (at least 32 characters)
+   - You can use: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+
 4. **Set up the database**
    ```bash
    npm run db:push
