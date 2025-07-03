@@ -1,65 +1,44 @@
 # StudyBuddy - Peer-to-Peer Learning Platform
 
-## Quick Start Guide
+## Super Simple Setup (Just 3 Commands!)
 
 ### Prerequisites
-- Node.js 18+ installed
-- PostgreSQL database (or use the provided database setup)
+- Node.js 18+ installed (Download from nodejs.org)
 
 ### Installation & Setup
 
-1. **Extract the project files**
+1. **Extract and navigate to the project**
    ```bash
    unzip studybuddy.zip
    cd studybuddy
    ```
 
-2. **Install dependencies**
+2. **Run the automatic setup**
+   ```bash
+   node start.js
+   ```
+
+**That's it!** The app will:
+- Install all dependencies automatically
+- Create the needed configuration files
+- Start the application on `http://localhost:5000`
+
+### Alternative Manual Setup (if automatic doesn't work)
+
+1. **Install dependencies**
    ```bash
    npm install
    ```
 
-3. **Set up environment variables**
-   Create a `.env` file in the root directory with:
-   ```
-   DATABASE_URL=your_postgresql_connection_string
-   SESSION_SECRET=your_session_secret_key
-   
-   # Optional: Firebase credentials for push notifications
-   FIREBASE_PROJECT_ID=your_firebase_project_id
-   FIREBASE_CLIENT_EMAIL=your_firebase_client_email
-   FIREBASE_PRIVATE_KEY=your_firebase_private_key
-   ```
-
-   **How to get these credentials:**
-   
-   **For PostgreSQL:**
-   - Install PostgreSQL locally or use a cloud service (Neon, Supabase, etc.)
-   - Format: `postgresql://username:password@host:port/database`
-   - Example: `postgresql://myuser:mypassword@localhost:5432/studybuddy`
-   
-   **For Firebase (optional):**
-   - Go to [Firebase Console](https://console.firebase.google.com)
-   - Create a new project or select existing one
-   - Go to Project Settings > Service Accounts
-   - Generate new private key (downloads JSON file)
-   - Copy the values from the JSON file to your .env
-   
-   **Session Secret:**
-   - Generate a random string (at least 32 characters)
-   - You can use: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
-
-4. **Set up the database**
+2. **Create config file**
    ```bash
-   npm run db:push
+   echo "SESSION_SECRET=studybuddy_secret_key_12345" > .env
    ```
 
-5. **Start the application**
+3. **Start the app**
    ```bash
    npm run dev
    ```
-
-The application will start on `http://localhost:5000`
 
 ### Features
 - Student/Tutor authentication and profiles
