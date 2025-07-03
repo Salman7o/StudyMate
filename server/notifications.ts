@@ -6,14 +6,17 @@ let firebaseInitialized = false;
 try {
   if (!admin.apps || !admin.apps.length) {
     if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+      const serviceAccount = {
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      };
+      
       admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-        }),
+        credential: admin.credential.cert(serviceAccount),
       });
       firebaseInitialized = true;
+      console.log('Firebase initialized successfully');
     } else {
       console.warn('Firebase credentials not found. Push notifications will be disabled.');
     }
