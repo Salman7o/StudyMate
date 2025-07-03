@@ -1,63 +1,144 @@
-# StudyBuddy - Peer-to-Peer Learning Platform
+# LearnBuddy - University Tutoring Platform
 
-## Project Overview
-A dynamic peer-to-peer learning platform connecting university students with expert tutors through an advanced session matching and booking system.
+## Overview
 
-**Current Status**: Fully functional with Firebase Cloud Messaging notification system implemented.
+LearnBuddy is a full-stack web application that connects university students with qualified tutors for personalized learning sessions. The platform facilitates tutor discovery, session booking, real-time messaging, and payment processing, creating a comprehensive educational marketplace.
 
-## Tech Stack
-- **Frontend**: React with TypeScript, Tailwind CSS, shadcn/ui components
-- **Backend**: Express.js with TypeScript
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React with TypeScript
+- **Build Tool**: Vite
+- **Routing**: Wouter for client-side routing
+- **UI Components**: Shadcn/ui with Radix UI primitives
+- **Styling**: Tailwind CSS with custom theme configuration
+- **State Management**: TanStack React Query for server state
+- **Form Handling**: React Hook Form with Zod validation
+- **Authentication**: Context-based auth with session management
+
+### Backend Architecture
+- **Runtime**: Node.js with Express server
+- **Language**: TypeScript with ESM modules
 - **Database**: PostgreSQL with Drizzle ORM
-- **Real-time**: WebSocket for messaging
-- **Notifications**: Firebase Cloud Messaging for push notifications
-- **Authentication**: Custom session-based authentication
+- **Database Provider**: Neon serverless PostgreSQL
+- **Authentication**: Passport.js with local strategy and bcrypt
+- **Session Management**: Express session with PostgreSQL store
+- **WebSocket**: WebSocket server for real-time messaging
+- **File Upload**: Integrated profile image handling
 
-## Key Features
-- ✅ User authentication (student/tutor roles)
-- ✅ Tutor profile management with ratings and reviews
-- ✅ Advanced search and filtering for tutors/students
-- ✅ Bidirectional booking system (student→tutor and tutor→student)
-- ✅ Real-time messaging between users
-- ✅ Session management with status tracking
-- ✅ Payment simulation (JazzCash/EasyPaisa)
-- ✅ Post-session feedback and rating system
-- ✅ Push notifications for session reminders
-- ✅ Responsive mobile-first design
+### Database Design
+- **ORM**: Drizzle with PostgreSQL dialect
+- **Schema Location**: `shared/schema.ts` for type sharing
+- **Migration Strategy**: Drizzle Kit for schema management
+- **Key Tables**: users, tutorProfiles, sessions, reviews, conversations, messages, paymentMethods
 
-## Project Architecture
-- **Client**: React SPA with Wouter routing
-- **Server**: Express API with middleware-based architecture
-- **Storage**: PostgreSQL with in-memory fallback for development
-- **Real-time**: WebSocket server for instant messaging
-- **Notifications**: Firebase Cloud Messaging with automatic session reminders
+## Key Components
 
-## Recent Changes
-- **2025-01-03**: Cleaned up project structure by removing unnecessary `StudyBuddy_Under_100MB` folder
-- **2025-01-03**: Implemented Firebase Cloud Messaging with session reminder notifications
-- **2025-01-03**: Added automatic session monitoring (15-minute reminders before sessions)
-- **2025-01-03**: Fixed TypeScript compilation errors in storage system
-- **2025-01-03**: Added graceful error handling for missing Firebase credentials
+### Authentication System
+- **Strategy**: Session-based authentication with secure password hashing
+- **User Roles**: Students and tutors with role-based access control
+- **Registration**: Multi-step registration with tutor profile creation
+- **Session Storage**: PostgreSQL-backed session store for scalability
+
+### Tutor Discovery Engine
+- **Search Filters**: Subject, program, semester, budget, availability, rating
+- **Profile System**: Detailed tutor profiles with reviews and ratings
+- **Availability Management**: Time slot booking system
+- **Featured Tutors**: Algorithmic ranking system
+
+### Real-time Messaging
+- **WebSocket Implementation**: Custom WebSocket server for instant messaging
+- **Message Persistence**: Database-backed message storage
+- **User Presence**: Online status tracking
+- **Conversation Threading**: Organized chat conversations
+
+### Booking System
+- **Session Scheduling**: Calendar-based booking with availability checking
+- **Status Management**: Pending, confirmed, completed, cancelled states
+- **Payment Integration**: JazzCash and EasyPaisa payment methods
+- **Review System**: Post-session feedback and rating system
+
+### Notification System
+- **Firebase Integration**: Push notifications for mobile devices
+- **Email Notifications**: Session reminders and status updates
+- **In-app Notifications**: Real-time notification delivery
+- **Reminder System**: Automated session reminder checking
+
+## Data Flow
+
+### User Registration Flow
+1. User submits registration form with role selection
+2. Backend validates data and creates user record
+3. If tutor role, additional tutor profile creation
+4. Session establishment and redirect to dashboard
+
+### Tutor Search Flow
+1. User applies search filters on frontend
+2. API request with filter parameters
+3. Database query with complex joins and filtering
+4. Paginated results returned with tutor profiles
+
+### Session Booking Flow
+1. Student selects tutor and time slot
+2. Booking request validation and creation
+3. Real-time notification to tutor
+4. Payment processing upon tutor confirmation
+5. Session status updates and notifications
+
+### Message Flow
+1. WebSocket connection establishment with authentication
+2. Message sent through WebSocket
+3. Message persistence in database
+4. Real-time delivery to recipient
+5. Read status tracking and updates
+
+## External Dependencies
+
+### Database Services
+- **Neon**: Serverless PostgreSQL database hosting
+- **Connection Pooling**: Built-in connection management
+
+### Authentication Services
+- **Passport.js**: Authentication middleware
+- **bcrypt**: Password hashing and verification
+
+### Payment Services
+- **JazzCash**: Pakistani mobile payment integration
+- **EasyPaisa**: Alternative mobile payment method
+
+### Notification Services
+- **Firebase Admin SDK**: Push notification delivery
+- **WebSocket**: Real-time in-app notifications
+
+### UI/UX Libraries
+- **Shadcn/ui**: Component library built on Radix UI
+- **Tailwind CSS**: Utility-first CSS framework
+- **Lucide React**: Icon library
+- **Date-fns**: Date manipulation and formatting
+
+## Deployment Strategy
+
+### Build Process
+- **Client Build**: Vite builds React app to `dist/public`
+- **Server Build**: ESBuild bundles TypeScript server to `dist`
+- **Static Assets**: Vite handles asset optimization and CDN preparation
+
+### Environment Configuration
+- **Database**: Environment variable for DATABASE_URL
+- **Sessions**: Secure session secret configuration
+- **Firebase**: Service account credentials for notifications
+- **Payment**: API keys for payment processor integration
+
+### Production Considerations
+- **Database Migrations**: Drizzle Kit for schema deployment
+- **Session Store**: PostgreSQL-backed session storage
+- **Static Files**: Express serves built React application
+- **WebSocket**: Integrated with HTTP server for real-time features
+
+## Changelog
+
+- July 03, 2025. Initial setup
 
 ## User Preferences
-- **Design**: UI inspired by Udemy and LinkedIn Learning
-- **Color Scheme**: 
-  - Primary: #4A90E2 (blue)
-  - Secondary: #34C759 (green)
-  - Background: #F8F9FA (light gray)
-  - Text: #2C3E50 (dark gray)
-  - Accent: #FF9500 (orange)
-- **Payment**: Simulation only (JazzCash/EasyPaisa mock integration)
-- **Notifications**: Firebase Cloud Messaging for session reminders
 
-## Development Notes
-- Using PostgreSQL database with Drizzle ORM
-- Firebase credentials required for push notifications (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY)
-- Session reminder system runs automatically every minute
-- WebSocket connection for real-time messaging
-- Bidirectional booking allows both students and tutors to initiate sessions
-
-## Next Steps
-- Provide Firebase credentials for full push notification functionality
-- Continue refining user experience based on feedback
-- Monitor and optimize notification system performance
+Preferred communication style: Simple, everyday language.
