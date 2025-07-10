@@ -6,11 +6,14 @@ ENV PORT=3000
 
 WORKDIR /app
 
-# Copy all source code first
-COPY . .
+# Copy package files first for better caching
+COPY package*.json ./
 
 # Install all dependencies (including dev dependencies for build)
-RUN npm install --production=false
+RUN npm ci --production=false --silent
+
+# Copy all source code
+COPY . .
 
 # Build the frontend using Vite (configured to use client directory as root)
 RUN npm run build
