@@ -13,7 +13,7 @@ import Home from "@/pages/Home";
 import FindTutors from "@/pages/find-tutors";
 import FindStudents from "@/pages/find-students";
 import MySessions from "@/pages/my-sessions";
-import Messages from "@/pages/messages";
+import Messages from "@/pages/Messages";
 import Profile from "@/pages/profile";
 import StudentDashboard from "@/pages/student-dashboard";
 import TutorDashboard from "@/pages/tutor-dashboard";
