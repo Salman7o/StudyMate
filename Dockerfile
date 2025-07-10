@@ -6,6 +6,9 @@ ENV PORT=3000
 
 WORKDIR /app
 
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++
+
 # Copy package files first for better caching
 COPY package*.json ./
 
