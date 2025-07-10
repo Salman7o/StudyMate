@@ -183,8 +183,13 @@ export class MemStorage implements IStorage {
           return true;
         }
         
+        // Convert student.subjects from string to array if needed
+        const studentSubjects = typeof student.subjects === 'string' 
+          ? student.subjects.split(',').map(s => s.trim()).filter(Boolean)
+          : (Array.isArray(student.subjects) ? student.subjects : []);
+        
         const matchFound = filters.subjects!.some(tutorSubject => 
-          student.subjects?.some(studentSubject => {
+          studentSubjects.some(studentSubject => {
             // Normalize both strings for more lenient matching
             const normalizedTutorSubject = tutorSubject.toLowerCase().trim();
             const normalizedStudentSubject = studentSubject.toLowerCase().trim();
@@ -391,7 +396,10 @@ export class MemStorage implements IStorage {
       
       if (studentSubjectsArray.length > 0) {
         tutorsWithUserData = tutorsWithUserData.filter(profile => {
-          const tutorSubjects = profile.subjects.map(subject => subject.toLowerCase());
+          // Convert tutor subjects from string to array
+          const tutorSubjects = typeof profile.subjects === 'string' 
+            ? profile.subjects.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+            : (Array.isArray(profile.subjects) ? profile.subjects.map(s => s.toLowerCase()) : []);
           
           // Check if any of the tutor subjects matches (or contains) any of the student subjects
           return studentSubjectsArray.some(studentSubject => 

@@ -4,7 +4,7 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { MobileNav } from "./mobile-nav";
 import { cn } from "@/lib/utils";
 import { Menu, Bell } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";

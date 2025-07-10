@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth, registerSchema, loginSchema } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";

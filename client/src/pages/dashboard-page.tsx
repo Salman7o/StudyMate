@@ -1,4 +1,4 @@
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 import MainLayout from "@/components/layout/MainLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import UpcomingSessions from "@/components/dashboard/UpcomingSessions";

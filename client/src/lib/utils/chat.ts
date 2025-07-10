@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/contexts/auth-context';
 
 interface ChatState {
   isOpen: boolean;

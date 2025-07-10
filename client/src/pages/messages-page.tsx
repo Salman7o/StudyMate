@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 import MainLayout from "@/components/layout/MainLayout";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Message } from "@shared/schema";

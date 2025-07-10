@@ -1,4 +1,4 @@
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 

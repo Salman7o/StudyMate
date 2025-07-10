@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 import { format } from "date-fns";
 import MainLayout from "@/components/layout/MainLayout";
 import PaymentForm from "@/components/payment/PaymentForm";
