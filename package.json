@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsx server/index.ts",
-    "build": "cd client && npm install && npm run build",
+    "build": "vite build",
     "start": "tsx server/index.ts",
     "setup-db": "node setup-db.js",
     "check": "tsc",

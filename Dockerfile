@@ -12,7 +12,7 @@ COPY . .
 # Install all dependencies (including dev dependencies for build)
 RUN npm install --production=false
 
-# Build the frontend
+# Build the frontend using Vite (configured to use client directory as root)
 RUN npm run build
 
 # Expose port
