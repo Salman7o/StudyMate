@@ -16,6 +16,25 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
+// Define TutorProfile type for clarity
+type TutorProfile = {
+  id: number;
+  user: {
+    id: number;
+    fullName: string;
+    university?: string;
+    program?: string;
+    semester?: string;
+  };
+  subjects: string[];
+  hourlyRate: number;
+  experience?: string;
+  availability?: string;
+  isAvailableNow?: boolean;
+  rating?: number;
+  reviewCount?: number;
+};
+
 export default function FindTutors() {
   const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
@@ -37,7 +56,7 @@ export default function FindTutors() {
   }, [isAuthenticated, user, setLocation]);
 
   // Fetch tutors based on the student's profile data (subjects, program, semester)
-  const { data: tutors = [], isLoading } = useQuery({
+  const { data: tutors = [], isLoading } = useQuery<TutorProfile[]>({
     queryKey: ['/api/tutors'],
     queryFn: async () => {
       const response = await fetch('/api/tutors', {
@@ -46,10 +65,32 @@ export default function FindTutors() {
       if (!response.ok) {
         throw new Error("Failed to fetch tutors");
       }
-      return response.json();
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        return data as TutorProfile[];
+      } else {
+        return [];
+      }
     },
     enabled: isAuthenticated && user?.role === "student", // Only run query if authenticated and student
   });
+
+  // Debug: log tutors to inspect its value
+  console.log('tutors from API:', tutors);
+  let normalizedTutors: TutorProfile[] = [];
+  if (Array.isArray(tutors)) {
+    const tutorsArr = tutors as any[];
+    normalizedTutors = tutorsArr
+      .filter((tutor) => tutor && typeof tutor.id === 'number' && tutor.user && typeof tutor.user === 'object')
+      .map((tutor) => ({
+        ...tutor,
+        subjects: Array.isArray(tutor.subjects)
+          ? tutor.subjects
+          : typeof tutor.subjects === 'string'
+            ? tutor.subjects.split(',').map((s: string) => s.trim()).filter(Boolean)
+            : [],
+      }));
+  }
 
   const loadMore = () => {
     setVisibleTutors(prevCount => prevCount + 6);
@@ -123,7 +164,7 @@ export default function FindTutors() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {tutors.slice(0, visibleTutors).map((tutor: any) => (
+          {normalizedTutors.slice(0, visibleTutors).filter((tutor) => tutor && typeof tutor.id === 'number').map((tutor) => (
             <div key={tutor.id} className="rounded-lg border border-red-200 dark:border-red-800/30 overflow-hidden bg-white dark:bg-red-950/10">
               <div className="p-6">
                 {/* Tutor Header Section */}

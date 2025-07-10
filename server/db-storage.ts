@@ -10,20 +10,15 @@ import {
 import { IStorage } from "./storage";
 import { db } from "./db";
 import { eq, and, desc, or, like, inArray, gte, lte } from "drizzle-orm";
-import connectPg from "connect-pg-simple";
 import session from "express-session";
-import { pool } from "./db";
-
-const PostgresSessionStore = connectPg(session);
 
 export class DatabaseStorage implements IStorage {
   sessionStore: any; // Using any to avoid type issues with SessionStore
 
   constructor() {
-    this.sessionStore = new PostgresSessionStore({ 
-      pool, 
-      createTableIfMissing: true 
-    });
+    // For SQLite, we'll use a simple in-memory session store for now
+    // You can implement a proper SQLite session store if needed
+    this.sessionStore = new session.MemoryStore();
   }
 
   // User methods
@@ -73,12 +68,12 @@ export class DatabaseStorage implements IStorage {
     // Apply filters
     if (filters.program && filters.program !== "All Programs") {
       console.log(`Filtering students by program: ${filters.program}`);
-      query = query.where(eq(users.program as any, filters.program));
+      query = query.where(eq(users.program, filters.program));
     }
     
     if (filters.semester && filters.semester !== "All Semesters") {
       console.log(`Filtering students by semester: ${filters.semester}`);
-      query = query.where(eq(users.semester as any, filters.semester));
+      query = query.where(eq(users.semester, filters.semester));
     }
     
     // Execute the initial query
@@ -91,12 +86,12 @@ export class DatabaseStorage implements IStorage {
       
       return students.filter(student => {
         // Skip students without subjects
-        if (!student.subjects || student.subjects.length === 0) {
+        if (!student.subjects) {
           return false;
         }
         
-        // Check if any student subject matches requested subjects
-        const studentSubjects = student.subjects.map(s => s.toLowerCase());
+        // Parse subjects string (assuming comma-separated)
+        const studentSubjects = student.subjects.split(',').map(s => s.trim().toLowerCase());
         
         return filters.subjects!.some(filterSubject => 
           studentSubjects.some(studentSubject => 
@@ -166,40 +161,73 @@ export class DatabaseStorage implements IStorage {
   }>): Promise<(TutorProfile & { user: User })[]> {
     console.log(`Matching with filters:`, filters);
     
-    // Create a query to join tutor profiles with their users
-    let query = db.select({
-      ...tutorProfiles,
-      user: users
+    // Get all tutor profiles with their users
+    const results = await db.select({
+      id: tutorProfiles.id,
+      userId: tutorProfiles.userId,
+      subjects: tutorProfiles.subjects,
+      hourlyRate: tutorProfiles.hourlyRate,
+      experience: tutorProfiles.experience,
+      availability: tutorProfiles.availability,
+      isAvailableNow: tutorProfiles.isAvailableNow,
+      rating: tutorProfiles.rating,
+      reviewCount: tutorProfiles.reviewCount,
+      user: {
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        fullName: users.fullName,
+        role: users.role,
+        profileImage: users.profileImage,
+        phoneNumber: users.phoneNumber,
+        program: users.program,
+        semester: users.semester,
+        university: users.university,
+        bio: users.bio,
+        location: users.location,
+        subjects: users.subjects,
+        availability: users.availability,
+        hourlyRate: users.hourlyRate,
+        joinedAt: users.joinedAt
+      }
     })
     .from(tutorProfiles)
     .innerJoin(users, eq(tutorProfiles.userId, users.id));
     
-    // Apply filters
+    console.log(`Found ${results.length} tutor profiles before filtering`);
+    
+    // Apply filters in memory for simplicity
+    let filteredResults = results;
+    
     if (filters.maxRate) {
       console.log(`Filtering by max rate: ${filters.maxRate}`);
-      query = query.where(lte(tutorProfiles.hourlyRate, filters.maxRate));
+      filteredResults = filteredResults.filter(profile => 
+        profile.hourlyRate <= filters.maxRate!
+      );
     }
     
     if (filters.isAvailableNow) {
       console.log('Filtering by availability now');
-      query = query.where(eq(tutorProfiles.isAvailableNow, true));
+      filteredResults = filteredResults.filter(profile => 
+        profile.isAvailableNow === 1
+      );
     }
     
     if (filters.program && filters.program !== "All Programs") {
       console.log(`Filtering by program: ${filters.program}`);
-      query = query.where(eq(users.program as any, filters.program));
+      filteredResults = filteredResults.filter(profile => 
+        profile.user.program === filters.program
+      );
     }
     
     if (filters.semester && filters.semester !== "All Semesters") {
       console.log(`Filtering by semester: ${filters.semester}`);
-      query = query.where(eq(users.semester as any, filters.semester));
+      filteredResults = filteredResults.filter(profile => 
+        profile.user.semester === filters.semester
+      );
     }
     
-    // Execute the query first
-    const results = await query;
-    console.log(`Found ${results.length} tutor profiles before subject filtering`);
-    
-    // If we have subjects filter, we need to post-process the results
+    // Post-process for subjects if specified
     if (filters.subjects && filters.subjects !== "All Subjects") {
       const subjectFilters = filters.subjects.split(',')
         .map(s => s.trim().toLowerCase())
@@ -208,22 +236,26 @@ export class DatabaseStorage implements IStorage {
       console.log(`Filtering by subjects: ${JSON.stringify(subjectFilters)}`);
       
       if (subjectFilters.length > 0) {
-        return results.filter(profile => {
-          // For each tutor profile, check if any of their subjects matches our filter
-          const tutorSubjects = profile.subjects.map(s => s.toLowerCase());
-          
+        filteredResults = filteredResults.filter(profile => {
+          // Skip profiles without subjects
+          if (!profile.subjects) {
+            return false;
+          }
+          // Parse subjects string (assuming comma-separated)
+          const profileSubjects = profile.subjects.split(',').map(s => s.trim().toLowerCase());
+          // Allow partial and case-insensitive matches
           return subjectFilters.some(filterSubject => 
-            tutorSubjects.some(tutorSubject => 
-              // Partial matching for better results
-              tutorSubject.includes(filterSubject) ||
-              filterSubject.includes(tutorSubject)
+            profileSubjects.some(profileSubject => 
+              profileSubject.includes(filterSubject) ||
+              filterSubject.includes(profileSubject)
             )
           );
         });
       }
     }
     
-    return results;
+    console.log(`Returning ${filteredResults.length} filtered tutor profiles`);
+    return filteredResults;
   }
   
   // Session methods

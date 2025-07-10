@@ -43,7 +43,24 @@ export default function StudentProfile() {
   const { id } = useParams();
   const studentId = id ? parseInt(id) : undefined;
   const { user } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
+  // Open booking modal if action=book in query params
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('Current location:', location);
+      console.log('window.location.search:', window.location.search);
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('action') === 'book') {
+        setIsBookingModalOpen(true);
+        console.log('Setting isBookingModalOpen to true');
+      } else {
+        setIsBookingModalOpen(false);
+        console.log('Setting isBookingModalOpen to false');
+      }
+    }
+  }, [location]);
 
   const { data: student, isLoading } = useQuery({
     queryKey: [`/api/students/${studentId}`],
@@ -94,8 +111,6 @@ export default function StudentProfile() {
     }
   };
   
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  
   const bookSession = () => {
     // Open the booking modal directly
     setIsBookingModalOpen(true);
@@ -120,15 +135,21 @@ export default function StudentProfile() {
         <p className="text-muted-foreground mb-6">
           The student profile you're looking for doesn't exist or you don't have permission to view it.
         </p>
-        <Button onClick={() => setLocation("/find-students")}>
-          Back to Student Search
-        </Button>
+        <Button onClick={() => setLocation("/find-students")}>Back to Student Search</Button>
       </div>
     );
   }
 
+  // Normalize subjects to always be an array
+  const subjectsArray = Array.isArray(student.subjects)
+    ? student.subjects
+    : typeof student.subjects === 'string'
+      ? student.subjects.split(',').map((s: unknown) => (s as string).trim()).filter(Boolean)
+      : [];
+
   return (
     <div className="max-w-4xl mx-auto py-6">
+      {console.log('Rendering StudentProfile, isBookingModalOpen:', isBookingModalOpen)}
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
@@ -162,7 +183,7 @@ export default function StudentProfile() {
               </div>
               
               <div className="flex flex-wrap gap-2 my-3">
-                {student.subjects?.map((subject: string, index: number) => (
+                {subjectsArray.map((subject: string, index: number) => (
                   <Badge 
                     key={index} 
                     variant="secondary"
@@ -265,13 +286,13 @@ export default function StudentProfile() {
         <TutorBookingModal
           isOpen={isBookingModalOpen}
           onClose={() => setIsBookingModalOpen(false)}
-          student={student}
+          student={{ ...student, subjects: subjectsArray }}
         />
       ) : student && user?.role === 'student' ? (
         <StudentBookingModal
           isOpen={isBookingModalOpen}
           onClose={() => setIsBookingModalOpen(false)}
-          student={student}
+          student={{ ...student, subjects: subjectsArray }}
         />
       ) : null}
     </div>

@@ -37,9 +37,20 @@ export default function Register() {
   const [availability, setAvailability] = useState("");
   const [subjectInput, setSubjectInput] = useState("");
 
+  // Add a mapping for common subject misspellings
+  const normalizeSubject = (subject: string) => {
+    const corrections: Record<string, string> = {
+      'calculas': 'calculus',
+      // Add more corrections as needed
+    };
+    const lower = subject.trim().toLowerCase();
+    return corrections[lower] || subject.trim();
+  };
+
   const addSubject = () => {
-    if (subjectInput.trim() !== "" && !subjects.includes(subjectInput.trim())) {
-      setSubjects([...subjects, subjectInput.trim()]);
+    const normalized = normalizeSubject(subjectInput);
+    if (normalized !== "" && !subjects.includes(normalized)) {
+      setSubjects([...subjects, normalized]);
       setSubjectInput("");
     }
   };
@@ -62,8 +73,15 @@ export default function Register() {
       return;
     }
 
+    // Normalize all subjects before submit
+    const normalizedSubjects = subjects.map(normalizeSubject);
+
     try {
-      // Create a base userData object
+      // Debug: Log the original subjects state
+      console.log("=== AUTH/REGISTER FORM DEBUG ===");
+      console.log("Original subjects state:", subjects, typeof subjects, Array.isArray(subjects));
+      
+      // Always construct userData with subjects as a string
       const userData: any = {
         username,
         password,
@@ -73,25 +91,17 @@ export default function Register() {
         program,
         semester,
         university,
-        availability, // Include availability for both students and tutors
-        subjects, // Include subjects for both students and tutors
-        hourlyRate: parseInt(hourlyRate) || 0, // Include hourly rate for both students and tutors
+        availability,
+        subjects: Array.isArray(normalizedSubjects) ? normalizedSubjects.join(", ") : normalizedSubjects, // Always a string
+        hourlyRate: parseInt(hourlyRate) || 0,
       };
-
-      // Add tutor profile data if role is tutor
-      if (role === "tutor") {
-        userData.tutorProfile = {
-          subjects,
-          hourlyRate: parseInt(hourlyRate) || 0,
-          experience,
-          availability,
-          isAvailableNow: false,
-          rating: 0,
-          reviewCount: 0
-        };
-      }
-
-      // The register function in useAuth.ts now handles the redirection based on user role
+      
+      // Debug: Log the constructed userData
+      console.log("Register payload:", userData, typeof userData.subjects, Array.isArray(userData.subjects));
+      console.log("Subjects value:", userData.subjects);
+      console.log("=== END AUTH/REGISTER FORM DEBUG ===");
+      
+      // Do NOT add tutorProfile here; let the backend handle it
       register(userData);
     } catch (err) {
       if (err instanceof Error) {
@@ -267,22 +277,22 @@ export default function Register() {
                           <SelectValue placeholder="Select a subject you need help with" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="calculas">Calculas</SelectItem>
-                          <SelectItem value="linear algebra">Linear Algebra</SelectItem>
-                          <SelectItem value="data structures">Data Structures</SelectItem>
-                          <SelectItem value="algorithms">Algorithms</SelectItem>
-                          <SelectItem value="database systems">Database Systems</SelectItem>
-                          <SelectItem value="programming">Programming</SelectItem>
-                          <SelectItem value="web development">Web Development</SelectItem>
-                          <SelectItem value="mechanics">Mechanics</SelectItem>
-                          <SelectItem value="electromagnetism">Electromagnetism</SelectItem>
-                          <SelectItem value="thermodynamics">Thermodynamics</SelectItem>
-                          <SelectItem value="organic chemistry">Organic Chemistry</SelectItem>
-                          <SelectItem value="biochemistry">Biochemistry</SelectItem>
-                          <SelectItem value="statistics">Statistics</SelectItem>
-                          <SelectItem value="accounting">Accounting</SelectItem>
-                          <SelectItem value="economics">Economics</SelectItem>
-                          <SelectItem value="finance">Finance</SelectItem>
+                          <SelectItem value="Calculus">Calculus</SelectItem>
+                          <SelectItem value="Linear Algebra">Linear Algebra</SelectItem>
+                          <SelectItem value="Data Structures">Data Structures</SelectItem>
+                          <SelectItem value="Algorithms">Algorithms</SelectItem>
+                          <SelectItem value="Database Systems">Database Systems</SelectItem>
+                          <SelectItem value="Programming">Programming</SelectItem>
+                          <SelectItem value="Web Development">Web Development</SelectItem>
+                          <SelectItem value="Mechanics">Mechanics</SelectItem>
+                          <SelectItem value="Electromagnetism">Electromagnetism</SelectItem>
+                          <SelectItem value="Thermodynamics">Thermodynamics</SelectItem>
+                          <SelectItem value="Organic Chemistry">Organic Chemistry</SelectItem>
+                          <SelectItem value="Biochemistry">Biochemistry</SelectItem>
+                          <SelectItem value="Statistics">Statistics</SelectItem>
+                          <SelectItem value="Accounting">Accounting</SelectItem>
+                          <SelectItem value="Economics">Economics</SelectItem>
+                          <SelectItem value="Finance">Finance</SelectItem>
                         </SelectContent>
                       </Select>
                       <Button 
@@ -360,22 +370,22 @@ export default function Register() {
                           <SelectValue placeholder="Select a subject you can teach" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="calculas">Calculas</SelectItem>
-                          <SelectItem value="linear algebra">Linear Algebra</SelectItem>
-                          <SelectItem value="data structures">Data Structures</SelectItem>
-                          <SelectItem value="algorithms">Algorithms</SelectItem>
-                          <SelectItem value="database systems">Database Systems</SelectItem>
-                          <SelectItem value="programming">Programming</SelectItem>
-                          <SelectItem value="web development">Web Development</SelectItem>
-                          <SelectItem value="mechanics">Mechanics</SelectItem>
-                          <SelectItem value="electromagnetism">Electromagnetism</SelectItem>
-                          <SelectItem value="thermodynamics">Thermodynamics</SelectItem>
-                          <SelectItem value="organic chemistry">Organic Chemistry</SelectItem>
-                          <SelectItem value="biochemistry">Biochemistry</SelectItem>
-                          <SelectItem value="statistics">Statistics</SelectItem>
-                          <SelectItem value="accounting">Accounting</SelectItem>
-                          <SelectItem value="economics">Economics</SelectItem>
-                          <SelectItem value="finance">Finance</SelectItem>
+                          <SelectItem value="Calculus">Calculus</SelectItem>
+                          <SelectItem value="Linear Algebra">Linear Algebra</SelectItem>
+                          <SelectItem value="Data Structures">Data Structures</SelectItem>
+                          <SelectItem value="Algorithms">Algorithms</SelectItem>
+                          <SelectItem value="Database Systems">Database Systems</SelectItem>
+                          <SelectItem value="Programming">Programming</SelectItem>
+                          <SelectItem value="Web Development">Web Development</SelectItem>
+                          <SelectItem value="Mechanics">Mechanics</SelectItem>
+                          <SelectItem value="Electromagnetism">Electromagnetism</SelectItem>
+                          <SelectItem value="Thermodynamics">Thermodynamics</SelectItem>
+                          <SelectItem value="Organic Chemistry">Organic Chemistry</SelectItem>
+                          <SelectItem value="Biochemistry">Biochemistry</SelectItem>
+                          <SelectItem value="Statistics">Statistics</SelectItem>
+                          <SelectItem value="Accounting">Accounting</SelectItem>
+                          <SelectItem value="Economics">Economics</SelectItem>
+                          <SelectItem value="Finance">Finance</SelectItem>
                         </SelectContent>
                       </Select>
                       <Button 

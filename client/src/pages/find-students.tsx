@@ -19,7 +19,7 @@ interface Student {
   program: string;
   semester: string;
   university: string;
-  subjects: string[];
+  subjects: string | string[];
   availability: string;
   hourlyRate: number;
   profileImage?: string;
@@ -84,9 +84,7 @@ export default function FindStudents() {
   };
   
   const bookSession = (studentId: number) => {
-    // We'll just navigate to the student profile page
-    // The booking functionality will be handled by the modal there
-    setLocation(`/students/${studentId}`);
+    setLocation(`/students/${studentId}?action=book`);
   };
 
   return (
@@ -226,7 +224,10 @@ export default function FindStudents() {
                               Subjects
                             </h4>
                             <div className="flex flex-wrap gap-2">
-                              {student.subjects?.map((subject, index) => (
+                              {(typeof student.subjects === 'string' 
+                                ? student.subjects.split(',').map((s: string) => s.trim())
+                                : (student.subjects as string[]) || []
+                              ).map((subject: string, index: number) => (
                                 <Badge
                                   key={index}
                                   variant="secondary"

@@ -77,6 +77,13 @@ export default function TutorProfilePage() {
     );
   }
 
+  // Normalize subjects to always be an array
+  const normalizedSubjects = Array.isArray(tutor.subjects)
+    ? tutor.subjects
+    : typeof tutor.subjects === 'string'
+      ? tutor.subjects.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : [];
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -100,7 +107,7 @@ export default function TutorProfilePage() {
 
               <h2 className="text-2xl font-bold mb-2">{tutor.user?.fullName}</h2>
               <p className="text-gray-300 mb-2">{tutor.user?.program} • Semester {tutor.user?.semester}</p>
-              <p className="text-gray-300 mb-4">{tutor.subjects?.join(", ")} Specialist</p>
+              <p className="text-gray-300 mb-4">{normalizedSubjects.join(", ")} Specialist</p>
 
               <div className="flex items-center mb-6">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -123,10 +130,8 @@ export default function TutorProfilePage() {
                   className="flex-1" 
                   onClick={() => {
                     try {
-                      // Try to use the booking modal with authentication
                       setShowBookingModal(true);
                     } catch (error) {
-                      // If auth context is not available, redirect to login
                       console.error("Authentication required for booking");
                       setLocation("/auth/login?redirect=/tutor-profile/" + id);
                     }
@@ -135,17 +140,9 @@ export default function TutorProfilePage() {
                   Book Session
                 </Button>
                 <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    try {
-                      // Try to use the chat modal with authentication
-                      setShowChatModal(true);
-                    } catch (error) {
-                      // If auth context is not available, redirect to login
-                      console.error("Authentication required for messaging");
-                      setLocation("/auth/login?redirect=/tutor-profile/" + id);
-                    }
-                  }}
+                  className="flex-1"
+                  onClick={() => setLocation(`/messages?user=${tutor.user?.id}`)}
+                  disabled={!tutor.user || !tutor.user.id}
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Message
@@ -162,7 +159,7 @@ export default function TutorProfilePage() {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Expertise</h3>
                 <div className="flex flex-wrap gap-2">
-                  {tutor.subjects?.map((subject) => (
+                  {normalizedSubjects.map((subject: string) => (
                     <Badge key={subject} variant="secondary">
                       {subject}
                     </Badge>
@@ -196,14 +193,6 @@ export default function TutorProfilePage() {
           isOpen={showBookingModal}
           onClose={() => setShowBookingModal(false)}
           tutor={tutor}
-        />
-      )}
-
-      {showChatModal && (
-        <ChatModal
-          isOpen={showChatModal}
-          onClose={() => setShowChatModal(false)}
-          user={tutor.user}
         />
       )}
     </div>

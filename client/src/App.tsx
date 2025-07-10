@@ -9,11 +9,11 @@ import { Navbar } from "@/components/layout/navbar";
 import { MobileNavigation } from "@/components/layout/mobile-navigation";
 import { SplashScreen } from "@/components/ui/splash-screen-v2";
 
-import Home from "@/pages/home";
+import Home from "@/pages/Home";
 import FindTutors from "@/pages/find-tutors";
 import FindStudents from "@/pages/find-students";
 import MySessions from "@/pages/my-sessions";
-import Messages from "@/pages/messages";
+import Messages from "@/pages/Messages";
 import Profile from "@/pages/profile";
 import StudentDashboard from "@/pages/student-dashboard";
 import TutorDashboard from "@/pages/tutor-dashboard";
@@ -21,8 +21,8 @@ import TopTutors from "@/pages/top-tutors";
 import StudentProfile from "@/pages/student-profile";
 import TutorProfilePage from "@/pages/tutor-profile-page";
 import SimpleTutorProfile from "@/pages/simple-tutor-profile";
-import Login from "@/pages/auth/login";
-import Register from "@/pages/auth/register";
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -52,7 +52,7 @@ function App() {
                   <Route path="/tutor-profile/:id" component={SimpleTutorProfile} />
                   <Route path="/top-tutors" component={TopTutors} />
                   <Route path="/students/:id" component={StudentProfile} />
-                  <Route path="/tutors/:id" component={SimpleTutorProfile} />
+                  <Route path="/tutors/:id" component={TutorProfilePage} />
                   <Route path="/auth/login" component={Login} />
                   <Route path="/auth/register" component={Register} />
                   <Route component={NotFound} />

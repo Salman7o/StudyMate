@@ -50,7 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.id);
 
       // Check if the user is updating their own profile
-      if (req.user.id !== userId) {
+      if (req.user!.id !== userId) {
         return res.status(403).json({ message: "You can only update your own profile" });
       }
 
@@ -86,7 +86,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isAvailableNow: req.query.isAvailableNow === 'true'
         };
 
-        const tutors = await storage.searchTutorProfiles(filters);
+        let tutors = await storage.searchTutorProfiles(filters) as any;
+        // Convert subjects string to array for each tutor
+        tutors = tutors.map((tutor: any) => ({
+          ...tutor,
+          subjects: typeof tutor.subjects === 'string' ? tutor.subjects.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+        }));
         return res.json(tutors);
       } 
 
@@ -102,19 +107,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Extract relevant information from student profile for matching
         const filters = {
-          subjects: student.subjects?.join(','), // Assuming subjects is stored as an array
-          program: student.program,
-          semester: student.semester,
-          maxRate: student.maxBudget // Assuming student has a budget field
+          subjects: student.subjects || "", // searchTutorProfiles expects string
+          program: student.program || undefined,
+          semester: student.semester || undefined,
         };
 
         console.log("Matching with filters:", filters);
-        const tutors = await storage.searchTutorProfiles(filters);
+        let tutors = await storage.searchTutorProfiles(filters) as any;
+        // Convert subjects string to array for each tutor
+        tutors = tutors.map((tutor: any) => ({
+          ...tutor,
+          subjects: typeof tutor.subjects === 'string' ? tutor.subjects.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+        }));
         return res.json(tutors);
       }
 
       // Fallback to returning all tutors if not a student or no profile data
-      const tutors = await storage.searchTutorProfiles({});
+      let tutors = await storage.searchTutorProfiles({}) as any;
+      // Convert subjects string to array for each tutor
+      tutors = tutors.map((tutor: any) => ({
+        ...tutor,
+        subjects: typeof tutor.subjects === 'string' ? tutor.subjects.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+      }));
       return res.json(tutors);
     } catch (error) {
       console.error("Search tutors error:", error);
@@ -161,7 +175,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const semesterFilter = (req.query.semester as string) || undefined;
 
       const filters = {
-        subjects: tutorProfile.subjects,
+        subjects: Array.isArray(tutorProfile.subjects)
+          ? tutorProfile.subjects
+          : (typeof tutorProfile.subjects === 'string' ? tutorProfile.subjects.split(',').map(s => s.trim()) : []),
         program: programFilter,
         semester: semesterFilter,
         availability: tutorProfile.availability, // Add availability for matching
@@ -276,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if the user is updating their own profile
-      if (req.user.id !== tutorProfile.userId) {
+      if (req.user!.id !== tutorProfile.userId) {
         return res.status(403).json({ message: "You can only update your own tutor profile" });
       }
 
@@ -368,7 +384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/sessions", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id!;
+      const userId = req.user!.id;
       const user = await storage.getUser(userId);
 
       if (!user) {
@@ -411,10 +427,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/sessions/pending", isAuthenticated, isAuthorized('tutor'), async (req, res) => {
     try {
-      const tutorId = req.query.tutorId ? parseInt(req.query.tutorId as string) : req.user.id!;
+      const tutorId = req.query.tutorId ? parseInt(req.query.tutorId as string) : req.user!.id;
 
       // Ensure the user is authorized to view this data (must be the tutor themselves)
-      if (tutorId !== req.user.id) {
+      if (tutorId !== req.user!.id) {
         return res.status(403).json({ message: "You can only view pending sessions for yourself" });
       }
 
@@ -525,7 +541,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Make sure the student ID matches the current user
-      if (result.data.studentId !== req.user.id) {
+      if (result.data.studentId !== req.user!.id) {
         return res.status(403).json({ message: "You can only leave reviews as yourself" });
       }
 
@@ -540,7 +556,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if the user was the student for this session
-      if (session.studentId !== req.user.id) {
+      if (session.studentId !== req.user!.id) {
         return res.status(403).json({ message: "You can only review sessions you participated in" });
       }
 
@@ -631,7 +647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Conversation routes
   app.get("/api/conversations", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id!;
+      const userId = req.user!.id;
       const conversations = await storage.getConversationsByUser(userId);
       return res.json(conversations);
     } catch (error) {
@@ -658,7 +674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Make sure one of the participants is the current user
-      const userId = req.user.id!;
+      const userId = req.user!.id;
       if (result.data.participantOneId !== userId && result.data.participantTwoId !== userId) {
         return res.status(403).json({ message: "You can only create conversations that include yourself" });
       }
@@ -682,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if the user is part of the conversation
-      const userId = req.user.id!;
+      const userId = req.user!.id;
       if (conversation.participantOneId !== userId && conversation.participantTwoId !== userId) {
         return res.status(403).json({ message: "You are not part of this conversation" });
       }
@@ -713,7 +729,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if the user is part of the conversation
-      const userId = req.user.id!;
+      const userId = req.user!.id;
       if (conversation.participantOneId !== userId && conversation.participantTwoId !== userId) {
         return res.status(403).json({ message: "You are not part of this conversation" });
       }
@@ -752,7 +768,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { subject, program, semester } = req.query;
 
       // Get the tutor profile to get their subjects
-      const tutorProfile = await storage.getTutorProfileByUserId(req.user.id!);
+      const tutorProfile = await storage.getTutorProfileByUserId(req.user!.id);
 
       // Create filter object
       const filters: Partial<{
@@ -766,7 +782,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filters.subjects = [subject as string];
       } else if (tutorProfile) {
         // If no specific subject filter is provided, use tutor's subjects
-        filters.subjects = tutorProfile.subjects;
+        filters.subjects = Array.isArray(tutorProfile.subjects)
+          ? tutorProfile.subjects
+          : (typeof tutorProfile.subjects === 'string' ? tutorProfile.subjects.split(',').map(s => s.trim()) : []);
       }
 
       if (program) {
@@ -802,7 +820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create tutor profile during registration if role is tutor
   app.post("/api/tutors/profile", isAuthenticated, isAuthorized('tutor'), async (req, res) => {
     try {
-      const userId = req.user.id!;
+      const userId = req.user!.id;
       const existingProfile = await storage.getTutorProfileByUserId(userId);
 
       if (existingProfile) {
@@ -811,11 +829,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const profile = await storage.createTutorProfile({
         userId,
-        subjects: req.body.subjects || [],
+        // Defensive: Always store subjects as a comma-separated string for the DB
+        subjects: Array.isArray(req.body.subjects) ? req.body.subjects.join(',') : (typeof req.body.subjects === 'string' ? req.body.subjects : String(req.body.subjects || "")),
         hourlyRate: req.body.hourlyRate || 0,
         experience: req.body.experience || "",
         availability: req.body.availability || "",
-        isAvailableNow: true,
+        isAvailableNow: req.body.isAvailableNow ? 1 : 0, // Convert boolean to integer
         rating: 0,
         reviewCount: 0
       });
@@ -829,7 +848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/payment-methods", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id!;
+      const userId = req.user!.id;
       const paymentMethods = await storage.getPaymentMethodsByUser(userId);
       return res.json(paymentMethods);
     } catch (error) {
@@ -840,7 +859,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/payment-methods", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id!;
+      const userId = req.user!.id;
       const paymentData = {
         ...req.body,
         userId
@@ -862,7 +881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/payment-methods/:id/default", isAuthenticated, async (req, res) => {
     try {
       const paymentMethodId = parseInt(req.params.id);
-      const userId = req.user.id!;
+      const userId = req.user!.id;
 
       const paymentMethod = await storage.getPaymentMethod(paymentMethodId);
 

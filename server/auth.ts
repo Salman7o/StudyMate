@@ -3,8 +3,9 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import bcrypt from "bcrypt";
+import fs from "fs";
 import { storage } from "./storage";
-import { User as SelectUser, InsertUser, userRoleEnum } from "@shared/schema";
+import { User as SelectUser, InsertUser } from "@shared/schema";
 import { insertUserSchema } from "@shared/schema";
 
 declare global {
@@ -26,9 +27,25 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 
 export async function register(req: Request, res: Response) {
   try {
+    console.log('Register request body:', req.body);
     // Validate the request body
     const userData = insertUserSchema.parse(req.body);
-    
+
+    // Convert subjects array to comma-separated string for DB
+    let subjectsString = "";
+    let subjectsArray: string[] = [];
+    const rawSubjects: any = userData.subjects;
+    if (Array.isArray(rawSubjects)) {
+      subjectsString = rawSubjects.join(",");
+      subjectsArray = rawSubjects;
+    } else if (typeof rawSubjects === "string" && rawSubjects) {
+      subjectsString = rawSubjects;
+      subjectsArray = rawSubjects.length > 0 ? rawSubjects.split(",") : [];
+    } else {
+      subjectsString = "";
+      subjectsArray = [];
+    }
+
     // Check if user already exists
     const existingUser = await storage.getUserByUsername(userData.username);
     if (existingUser) {
@@ -46,35 +63,48 @@ export async function register(req: Request, res: Response) {
     // Create the user
     const user = await storage.createUser({
       ...userData,
-      password: hashedPassword
+      password: hashedPassword,
+      subjects: subjectsString as any // always a string for user
     });
-    
+
+    // Save user data as JSON to users.txt (excluding password)
+    console.log('CWD:', process.cwd());
+    const userToSave = {
+      username: user.username,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      createdAt: new Date().toISOString()
+    };
+    try {
+      fs.appendFileSync('users.txt', JSON.stringify(userToSave) + '\n');
+      console.log('User data saved to users.txt');
+    } catch (error) {
+      console.error('Error saving user data to file:', error);
+    }
+
     // If the user is registering as a tutor, automatically create a tutor profile
     if (user.role === 'tutor') {
       try {
         console.log("Creating tutor profile for user:", user.id);
-        
         // Use default subjects if none provided
         const defaultSubjects = ["General Studies"];
-        const subjects = Array.isArray(user.subjects) && user.subjects.length > 0 
-          ? user.subjects 
-          : defaultSubjects;
-        
+        let subjects: string[] = Array.isArray(subjectsArray) && subjectsArray.length > 0 ? subjectsArray : defaultSubjects;
         // Use default availability if none provided
         const availability = user.availability || "Weekdays: 5pm-9pm, Weekends: 10am-6pm";
-        
+        // Defensive: Always store subjects as a comma-separated string for the DB
+        let tutorSubjectsString = Array.isArray(subjects) ? subjects.join(',') : (typeof subjects === 'string' ? subjects : String(subjects));
         // Create default tutor profile
         const tutorProfile = await storage.createTutorProfile({
           userId: user.id,
-          subjects: subjects,
+          subjects: tutorSubjectsString, // Always a string
           hourlyRate: user.hourlyRate || 1000, // Default hourly rate of 1000
           experience: "New tutor on the platform",
           availability: availability,
-          isAvailableNow: true,
+          isAvailableNow: 1, // Use integer 1 instead of boolean true
           rating: 0,
           reviewCount: 0
         });
-        
         console.log(`Successfully created tutor profile ID: ${tutorProfile.id} for user ID: ${user.id}`);
       } catch (profileError) {
         console.error("Error creating tutor profile:", profileError);
@@ -99,13 +129,14 @@ export async function register(req: Request, res: Response) {
       });
     });
   } catch (error: any) {
+    console.log('Validation error:', error.message);
     return res.status(400).json({ message: "Invalid user data", error: error.message });
   }
 }
 
 export async function login(req: Request, res: Response) {
   console.log("Login attempt for username:", req.body.username);
-  
+
   passport.authenticate("local", (err: any, user: any, info: any) => {
     if (err) {
       console.error("Authentication error:", err);
@@ -115,7 +146,7 @@ export async function login(req: Request, res: Response) {
       console.log("Login failed - Invalid credentials for:", req.body.username);
       return res.status(401).json({ message: "Invalid username or password" });
     }
-    
+
     console.log("User authenticated, calling req.login for user ID:", user.id);
     req.login(user, (err) => {
       if (err) {

@@ -51,7 +51,7 @@ export function SearchFilters({ onSearch }: SearchFiltersProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All Subjects">All Subjects</SelectItem>
-              <SelectItem value="calculas">Calculas</SelectItem>
+              <SelectItem value="Calculus">Calculus</SelectItem>
               <SelectItem value="linear algebra">Linear Algebra</SelectItem>
               <SelectItem value="data structures">Data Structures</SelectItem>
               <SelectItem value="algorithms">Algorithms</SelectItem>
