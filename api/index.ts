@@ -5,6 +5,35 @@ import {
 } from '../server/auth';
 import { validateZodSchema } from '../server/utils';
 
+// Define User type for serverless function
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  fullName: string;
+  role: string;
+  profileImage?: string | null;
+  phoneNumber?: string | null;
+  program?: string | null;
+  semester?: string | null;
+  university?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  subjects?: string | null;
+  availability?: string | null;
+  hourlyRate?: number | null;
+  joinedAt: Date;
+}
+
+// Extend Express Request to include user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
+    }
+  }
+}
+
 const app = express();
 
 // Middleware
@@ -101,7 +130,7 @@ const serverlessStorage = {
     inMemoryStorage.tutorProfiles.push(newProfile);
     return newProfile;
   },
-  getSessionsByUserId: async (userId: number) => {
+  getSessionsByTutor: async (userId: number) => {
     return inMemoryStorage.sessions.filter((s: any) => s.studentId === userId || s.tutorId === userId);
   },
   createSession: async (sessionData: any) => {
@@ -114,7 +143,7 @@ const serverlessStorage = {
     inMemoryStorage.sessions.push(newSession);
     return newSession;
   },
-  getConversationsByUserId: async (userId: number) => {
+  getConversationsByUser: async (userId: number) => {
     return inMemoryStorage.conversations.filter((c: any) => 
       c.participantOneId === userId || c.participantTwoId === userId
     );
@@ -128,7 +157,7 @@ const serverlessStorage = {
     inMemoryStorage.conversations.push(newConversation);
     return newConversation;
   },
-  getMessagesByConversationId: async (conversationId: number) => {
+  getMessagesByConversation: async (conversationId: number) => {
     return inMemoryStorage.messages.filter((m: any) => m.conversationId === conversationId);
   },
   createMessage: async (messageData: any) => {
@@ -140,7 +169,7 @@ const serverlessStorage = {
     inMemoryStorage.messages.push(newMessage);
     return newMessage;
   },
-  getPaymentMethodsByUserId: async (userId: number) => {
+  getPaymentMethodsByUser: async (userId: number) => {
     return [];
   }
 };
@@ -410,7 +439,7 @@ app.get("/api/students", async (req, res) => {
 // Sessions routes
 app.get("/api/sessions", isAuthenticated, async (req, res) => {
   try {
-    const sessions = await storage.getSessionsByUserId(req.user!.id);
+    const sessions = await storage.getSessionsByTutor((req.user as any).id);
     return res.json(sessions);
   } catch (error) {
     console.error("Get sessions error:", error);
@@ -445,7 +474,7 @@ app.post("/api/sessions", isAuthenticated, async (req, res) => {
 // Conversations routes
 app.get("/api/conversations", isAuthenticated, async (req, res) => {
   try {
-    const conversations = await storage.getConversationsByUserId(req.user!.id);
+    const conversations = await storage.getConversationsByUser(req.user!.id);
     return res.json(conversations);
   } catch (error) {
     console.error("Get conversations error:", error);
@@ -476,7 +505,7 @@ app.post("/api/conversations", isAuthenticated, async (req, res) => {
 app.get("/api/conversations/:id/messages", isAuthenticated, async (req, res) => {
   try {
     const conversationId = parseInt(req.params.id);
-    const messages = await storage.getMessagesByConversationId(conversationId);
+    const messages = await storage.getMessagesByConversation(conversationId);
     return res.json(messages);
   } catch (error) {
     console.error("Get messages error:", error);
@@ -526,7 +555,7 @@ app.get("/api/subjects", async (req, res) => {
 // Payment methods route
 app.get("/api/payment-methods", isAuthenticated, async (req, res) => {
   try {
-    const paymentMethods = await storage.getPaymentMethodsByUserId(req.user!.id);
+    const paymentMethods = await storage.getPaymentMethodsByUser(req.user!.id);
     return res.json(paymentMethods);
   } catch (error) {
     console.error("Get payment methods error:", error);
