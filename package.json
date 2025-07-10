@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "tsx server/index.ts",
     "build": "vite build",
+    "vercel-build": "npm run build",
     "start": "tsx server/index.ts",
     "setup-db": "node setup-db.js",
     "check": "tsc",
