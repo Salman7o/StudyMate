@@ -1,8 +1,8 @@
 [phases.setup]
-nixPkgs = ["nodejs", "nodePackages.npm"]
+nixPkgs = ["nodejs", "python3", "make", "gcc"]
 
 [phases.install]
-cmds = ["npm install"]
+cmds = ["npm ci --production=false"]
 
 [phases.build]
 cmds = ["npm run build"]
