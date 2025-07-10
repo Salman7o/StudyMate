@@ -13,7 +13,7 @@ import Home from "@/pages/Home";
 import FindTutors from "@/pages/find-tutors";
 import FindStudents from "@/pages/find-students";
 import MySessions from "@/pages/my-sessions";
-import Messages from "@/pages/Messages";
+import Messages from "@/pages/messages";
 import Profile from "@/pages/profile";
 import StudentDashboard from "@/pages/student-dashboard";
 import TutorDashboard from "@/pages/tutor-dashboard";
@@ -21,8 +21,8 @@ import TopTutors from "@/pages/top-tutors";
 import StudentProfile from "@/pages/student-profile";
 import TutorProfilePage from "@/pages/tutor-profile-page";
 import SimpleTutorProfile from "@/pages/simple-tutor-profile";
-import Login from "@/pages/auth/Login";
-import Register from "@/pages/auth/Register";
+import Login from "@/pages/auth/login";
+import Register from "@/pages/auth/register";
 import NotFound from "@/pages/not-found";
 
 function App() {
