@@ -2,16 +2,11 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY client/package*.json ./client/
-
-# Install dependencies
-RUN npm install
-RUN cd client && npm install
-
-# Copy source code
+# Copy all source code first
 COPY . .
+
+# Install dependencies (only root package.json exists)
+RUN npm install
 
 # Build the frontend
 RUN npm run build
