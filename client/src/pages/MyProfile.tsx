@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "../App";
+import { useAuth } from "@/contexts/auth-context";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -58,15 +58,15 @@ const tutorProfileSchema = z.object({
 });
 
 export default function MyProfile() {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [tab, setTab] = useState("profile");
   const [isTutor, setIsTutor] = useState(false);
 
-  // Fetch user profile if authenticated
-  const { data: userData, isLoading: isUserLoading } = useQuery<User>({
-    queryKey: user ? [`/api/users/${user.id}`] : null,
-    enabled: !!user,
+  // Fix queryKey usage
+  const { data: userData, isLoading: isUserLoading } = useQuery({
+    queryKey: user ? [`/api/users/${user.id}`] : [],
+    enabled: !!user
   });
 
   // Fetch tutor profile if user is a tutor
@@ -138,9 +138,6 @@ export default function MyProfile() {
       return response.json();
     },
     onSuccess: (updatedUser) => {
-      if (setUser && user) {
-        setUser({ ...updatedUser, isAuthenticated: true });
-      }
       queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}`] });
       toast({
         title: "Profile updated",
@@ -198,9 +195,6 @@ export default function MyProfile() {
       return response.json();
     },
     onSuccess: (updatedUser) => {
-      if (setUser && user) {
-        setUser({ ...updatedUser, isAuthenticated: true });
-      }
       queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}`] });
       setIsTutor(true);
       toast({

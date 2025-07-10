@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/auth-context";
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,7 +10,7 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const [location] = useLocation();
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   
   // Don't show navbar and footer on login/register pages
   const isAuthPage = location === "/login" || location === "/register";

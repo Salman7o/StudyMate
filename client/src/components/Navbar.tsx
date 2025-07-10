@@ -15,14 +15,14 @@ import {
   SheetTrigger 
 } from "@/components/ui/sheet";
 import { Bell, Menu, MessageSquare } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 
 const Navbar = () => {
   const [location, navigate] = useLocation();
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 

@@ -245,7 +245,7 @@ export default function BookSession() {
             <CardTitle>Book a Session with {student.fullName}</CardTitle>
             <CardContent className="p-0">
               <p className="text-muted-foreground">
-                {student.program}, {student.semester}th Semester • {student.subjects?.join(", ")}
+                {student.program}, {student.semester}th Semester • {typeof student.subjects === 'string' ? student.subjects : student.subjects?.join(", ")}
               </p>
             </CardContent>
           </CardHeader>

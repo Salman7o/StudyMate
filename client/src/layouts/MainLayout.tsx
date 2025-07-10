@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useAuth } from "../App";
+import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -11,13 +11,13 @@ import { useQuery } from "@tanstack/react-query";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Get unread message count if user is logged in
+  // Fix queryKey usage
   const { data: unreadCount } = useQuery({
-    queryKey: user ? [`/api/users/${user.id}/unread-count`] : null,
+    queryKey: user ? [`/api/users/${user.id}/unread-count`] : [],
     enabled: !!user
   });
 
@@ -30,7 +30,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   ];
 
   const handleLogout = () => {
-    setUser(null);
+    // setUser(null); // This line is removed as per the edit hint
     window.location.href = "/";
   };
 
