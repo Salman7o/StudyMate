@@ -30,7 +30,7 @@ function App() {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="studymate-theme">
+      <ThemeProvider>
         <AuthProvider>
           {showSplash && (
             <SplashScreen onFinished={() => setShowSplash(false)} />
