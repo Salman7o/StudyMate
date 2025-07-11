@@ -64,15 +64,15 @@ export default function MyProfile() {
   const [isTutor, setIsTutor] = useState(false);
 
   // Fix queryKey usage
-  const { data: userData, isLoading: isUserLoading } = useQuery({
+  const { data: userData, isLoading: isUserLoading } = useQuery<any>({
     queryKey: user ? [`/api/users/${user.id}`] : [],
     enabled: !!user
   });
 
   // Fetch tutor profile if user is a tutor
-  const { data: tutorProfile, isLoading: isTutorProfileLoading } = useQuery<TutorProfile>({
-    queryKey: (user && user.userType === "tutor") ? [`/api/tutors/profile/${user.id}`] : null,
-    enabled: !!user && user.userType === "tutor",
+  const { data: tutorProfile, isLoading: isTutorProfileLoading } = useQuery<any>({
+    queryKey: (user && (user as any).userType === "tutor") ? [`/api/tutors/profile/${user.id}`] : [],
+    enabled: !!user && (user as any).userType === "tutor",
   });
 
   // Set up forms
@@ -105,27 +105,27 @@ export default function MyProfile() {
   useEffect(() => {
     if (userData) {
       userForm.reset({
-        firstName: userData.firstName || "",
-        lastName: userData.lastName || "",
-        email: userData.email || "",
-        bio: userData.bio || "",
-        program: userData.program || "",
-        semester: userData.semester || "",
+        firstName: (userData as any).firstName || "",
+        lastName: (userData as any).lastName || "",
+        email: (userData as any).email || "",
+        bio: (userData as any).bio || "",
+        program: (userData as any).program || "",
+        semester: (userData as any).semester || "",
       });
-      setIsTutor(userData.userType === "tutor");
+      setIsTutor((userData as any).userType === "tutor");
     }
   }, [userData, userForm]);
 
   useEffect(() => {
     if (tutorProfile) {
       tutorForm.reset({
-        hourlyRate: tutorProfile.hourlyRate.toString() || "",
-        subjects: tutorProfile.subjects.join(", ") || "",
-        expertise: tutorProfile.expertise.join(", ") || "",
-        education: tutorProfile.education || "",
-        availableDays: tutorProfile.availableDays.join(", ") || "",
-        availableTimeStart: tutorProfile.availableTimeStart || "",
-        availableTimeEnd: tutorProfile.availableTimeEnd || "",
+        hourlyRate: ((tutorProfile as any).hourlyRate as any)?.toString() || "",
+        subjects: Array.isArray((tutorProfile as any).subjects) ? (tutorProfile as any).subjects.join(", ") : ((tutorProfile as any).subjects || ""),
+        expertise: Array.isArray((tutorProfile as any).expertise) ? (tutorProfile as any).expertise.join(", ") : ((tutorProfile as any).expertise || ""),
+        education: (tutorProfile as any).education || "",
+        availableDays: Array.isArray((tutorProfile as any).availableDays) ? (tutorProfile as any).availableDays.join(", ") : ((tutorProfile as any).availableDays || ""),
+        availableTimeStart: (tutorProfile as any).availableTimeStart || "",
+        availableTimeEnd: (tutorProfile as any).availableTimeEnd || "",
       });
     }
   }, [tutorProfile, tutorForm]);
@@ -220,14 +220,13 @@ export default function MyProfile() {
   const onTutorSubmit = (data: z.infer<typeof tutorProfileSchema>) => {
     const formattedData = {
       hourlyRate: parseFloat(data.hourlyRate),
-      subjects: data.subjects.split(",").map(s => s.trim()),
-      expertise: data.expertise.split(",").map(e => e.trim()),
+      subjects: typeof data.subjects === 'string' ? data.subjects : Array.isArray(data.subjects) ? data.subjects.join(',') : '',
+      expertise: typeof data.expertise === 'string' ? data.expertise : Array.isArray(data.expertise) ? data.expertise.join(',') : '',
       education: data.education,
-      availableDays: data.availableDays.split(",").map(d => d.trim()),
+      availableDays: typeof data.availableDays === 'string' ? data.availableDays : Array.isArray(data.availableDays) ? data.availableDays.join(',') : '',
       availableTimeStart: data.availableTimeStart,
       availableTimeEnd: data.availableTimeEnd,
     };
-    
     updateTutorProfileMutation.mutate(formattedData);
   };
 

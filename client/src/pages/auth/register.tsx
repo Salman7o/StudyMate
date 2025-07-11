@@ -92,7 +92,7 @@ export default function Register() {
         semester,
         university,
         availability,
-        subjects: Array.isArray(normalizedSubjects) ? normalizedSubjects.join(", ") : normalizedSubjects, // Always a string
+        subjects: Array.isArray(normalizedSubjects) ? normalizedSubjects.join(",") : normalizedSubjects, // Always a string
         hourlyRate: parseInt(hourlyRate) || 0,
       };
       

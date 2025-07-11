@@ -83,7 +83,7 @@ export default function Profile() {
   }, [user]);
 
   // Get payment methods
-  const { data: paymentMethods = [] } = useQuery({
+  const { data: paymentMethods = [] } = useQuery<any[]>({
     queryKey: ['/api/payment-methods'],
     enabled: isAuthenticated,
   });
@@ -123,14 +123,18 @@ export default function Profile() {
       // If user is a tutor, update tutor profile
       if (user?.role === 'tutor') {
         console.log("Submitting tutor profile update:", tutorFormData);
+        const tutorPayload = {
+          ...tutorFormData,
+          subjects: Array.isArray(tutorFormData.subjects) ? tutorFormData.subjects.join(',') : tutorFormData.subjects
+        };
         if (tutorProfile) {
           // Update existing tutor profile
-          const tutorResponse = await apiRequest("PUT", `/api/tutors/${tutorProfile.id}`, tutorFormData);
+          const tutorResponse = await apiRequest("PUT", `/api/tutors/${tutorProfile.id}`, tutorPayload);
           console.log("Tutor profile update response:", tutorResponse);
         } else {
           // Create new tutor profile
           const newTutorResponse = await apiRequest("POST", `/api/tutors`, {
-            ...tutorFormData,
+            ...tutorPayload,
             userId: user?.id
           });
           console.log("New tutor profile response:", newTutorResponse);
