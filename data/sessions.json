@@ -1,0 +1,47 @@
+[
+  {
+    "studentId": 1,
+    "tutorId": 2,
+    "subject": "Calculus",
+    "sessionType": "One-on-One Tutoring",
+    "date": "2025-07-13T09:00:00.000Z",
+    "startTime": "14:00",
+    "duration": 60,
+    "totalAmount": 1000,
+    "status": "cancelled",
+    "description": "",
+    "id": 1,
+    "createdAt": "2025-07-13T00:47:00.818Z",
+    "updatedAt": "2025-07-13T00:52:42.179Z"
+  },
+  {
+    "studentId": 1,
+    "tutorId": 2,
+    "subject": "Calculus",
+    "sessionType": "One-on-One Tutoring",
+    "date": "2025-07-13T09:00:00.000Z",
+    "startTime": "14:00",
+    "duration": 60,
+    "totalAmount": 1000,
+    "status": "completed",
+    "description": "",
+    "id": 2,
+    "createdAt": "2025-07-13T00:52:33.946Z",
+    "updatedAt": "2025-07-13T00:53:13.404Z"
+  },
+  {
+    "studentId": 1,
+    "tutorId": 2,
+    "subject": "Calculus",
+    "sessionType": "One-on-One Tutoring",
+    "date": "2025-07-13T09:00:00.000Z",
+    "startTime": "14:00",
+    "duration": 60,
+    "totalAmount": 1000,
+    "status": "completed",
+    "description": "",
+    "id": 3,
+    "createdAt": "2025-07-13T01:13:39.906Z",
+    "updatedAt": "2025-07-13T01:13:56.496Z"
+  }
+]

@@ -1,0 +1,11 @@
+[
+  {
+    "conversationId": 1,
+    "senderId": 1,
+    "receiverId": 2,
+    "content": "hello",
+    "status": "read",
+    "id": 1,
+    "sentAt": "2025-07-13T00:52:08.752Z"
+  }
+]

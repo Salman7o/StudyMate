@@ -136,16 +136,7 @@ export default function TutorProfilePage() {
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => {
-                    try {
-                      // Try to use the chat modal with authentication
-                      setShowChatModal(true);
-                    } catch (error) {
-                      // If auth context is not available, redirect to login
-                      console.error("Authentication required for messaging");
-                      setLocation("/auth/login?redirect=/tutor-profile/" + id);
-                    }
-                  }}
+                  onClick={() => setLocation(`/messages?user=${id}`)}
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Message

@@ -1,0 +1,16 @@
+[
+  {
+    "participantOneId": 2,
+    "participantTwoId": 1,
+    "id": 1,
+    "lastMessageAt": "2025-07-13T00:52:08.752Z",
+    "createdAt": "2025-07-13T00:45:47.526Z"
+  },
+  {
+    "participantOneId": 3,
+    "participantTwoId": 2,
+    "id": 2,
+    "lastMessageAt": "2025-07-13T01:17:23.018Z",
+    "createdAt": "2025-07-13T01:17:23.018Z"
+  }
+]

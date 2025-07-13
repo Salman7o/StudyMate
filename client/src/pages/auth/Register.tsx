@@ -1,329 +1,448 @@
 import { useState } from "react";
-import { Link, useLocation, Redirect } from "wouter";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/App";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useAuth } from "@/contexts/auth-context";
+import { Link } from "wouter";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Eye, EyeOff } from "lucide-react";
-
-// Form schema
-const registerSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  userType: z.enum(["student", "tutor"]),
-  program: z.string().optional(),
-  semester: z.string().optional(),
-});
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function Register() {
-  const [location, navigate] = useLocation();
-  const { setUser, user } = useAuth();
-  const { toast } = useToast();
-  const [showPassword, setShowPassword] = useState(false);
-
-  // Check if user is registering as a tutor from URL
-  const params = new URLSearchParams(window.location.search);
-  const initialUserType = params.get("type") === "tutor" ? "tutor" : "student";
-
-  // Form setup
-  const form = useForm<z.infer<typeof registerSchema>>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      username: "",
-      email: "",
-      password: "",
-      userType: initialUserType,
-      program: "",
-      semester: "",
-    },
-  });
+  const { register, loading } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  // Get tab from URL query parameter if it exists
+  const searchParams = new URLSearchParams(window.location.search);
+  const tabParam = searchParams.get('tab');
+  const initialRole = tabParam === 'tutor' ? 'tutor' : 'student';
+  const [role, setRole] = useState<"student" | "tutor">(initialRole);
   
-  // Register mutation
-  const registerMutation = useMutation({
-    mutationFn: async (userData: z.infer<typeof registerSchema>) => {
-      const response = await apiRequest("POST", "/api/auth/register", userData);
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Registration successful",
-        description: "Your account has been created. You can now log in.",
-        variant: "default",
-      });
-      
-      // Auto login after registration
-      setUser({
-        ...data,
-        isAuthenticated: true,
-      });
-      
-      // Redirect to profile completion if tutor
-      if (data.userType === "tutor") {
-        navigate("/my-profile");
-      } else {
-        navigate("/");
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Registration failed",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  // Common form fields
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [university, setUniversity] = useState("University");
+  const [program, setProgram] = useState("");
+  const [semester, setSemester] = useState("");
   
-  // Form submission handler
-  const onSubmit = (values: z.infer<typeof registerSchema>) => {
-    registerMutation.mutate(values);
+  // Tutor specific fields
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [hourlyRate, setHourlyRate] = useState("");
+  const [experience, setExperience] = useState("");
+  const [availability, setAvailability] = useState("");
+  const [subjectInput, setSubjectInput] = useState("");
+
+  const addSubject = () => {
+    if (subjectInput.trim() !== "" && !subjects.includes(subjectInput.trim())) {
+      setSubjects([...subjects, subjectInput.trim()]);
+      setSubjectInput("");
+    }
   };
 
-  // If already logged in, redirect
-  if (user) {
-    return <Redirect to="/" />;
-  }
+  const removeSubject = (subject: string) => {
+    setSubjects(subjects.filter(s => s !== subject));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (subjects.length === 0) {
+      setError("Please add at least one subject");
+      return;
+    }
+
+    try {
+      // Create a base userData object
+      const userData: any = {
+        username,
+        password,
+        email,
+        fullName,
+        role,
+        program,
+        semester,
+        university,
+        availability, // Include availability for both students and tutors
+        subjects, // Include subjects for both students and tutors
+        hourlyRate: parseInt(hourlyRate) || 0, // Include hourly rate for both students and tutors
+      };
+
+      // Add tutor profile data if role is tutor
+      if (role === "tutor") {
+        userData.tutorProfile = {
+          subjects,
+          hourlyRate: parseInt(hourlyRate) || 0,
+          experience,
+          availability,
+          isAvailableNow: false,
+          rating: 0,
+          reviewCount: 0
+        };
+      }
+
+      // The register function in useAuth.ts now handles the redirection based on user role
+      register(userData);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Registration failed. Please try again.");
+      }
+    }
+  };
 
   return (
-    <div className="max-w-md mx-auto px-4 py-12">
-      <Card>
+    <div className="flex items-center justify-center py-8">
+      <Card className="w-full max-w-2xl mx-auto">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-          <CardDescription>
-            Sign up to find tutors or become a tutor
+          <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
+          <CardDescription className="text-center">
+            Join StudyMate and start your learning journey
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <Tabs defaultValue={initialRole} onValueChange={(value) => setRole(value as "student" | "tutor")}>
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="student">Student</TabsTrigger>
+              <TabsTrigger value="tutor">Tutor</TabsTrigger>
+            </TabsList>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Choose a username"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Create a password"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm your password"
+                    required
+                  />
+                </div>
               </div>
               
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="university">University</Label>
+                  <Input
+                    id="university"
+                    value={university}
+                    onChange={(e) => setUniversity(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="program">Program</Label>
+                  <Select onValueChange={setProgram}>
+                    <SelectTrigger id="program">
+                      <SelectValue placeholder="Select program" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Computer Science">Computer Science</SelectItem>
+                      <SelectItem value="Software Engineering">Software Engineering</SelectItem>
+                      <SelectItem value="Artificial Intelligence">Artificial Intelligence</SelectItem>
+                      <SelectItem value="Data Science">Data Science</SelectItem>
+                      <SelectItem value="Electrical Engineering">Electrical Engineering</SelectItem>
+                      <SelectItem value="Mechanical Engineering">Mechanical Engineering</SelectItem>
+                      <SelectItem value="Civil Engineering">Civil Engineering</SelectItem>
+                      <SelectItem value="Business Administration">Business Administration</SelectItem>
+                      <SelectItem value="Finance">Finance</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Economics">Economics</SelectItem>
+                      <SelectItem value="Accounting">Accounting</SelectItem>
+                      <SelectItem value="Media Sciences">Media Sciences</SelectItem>
+                      <SelectItem value="Social Sciences">Social Sciences</SelectItem>
+                      <SelectItem value="Law">Law</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="semester">Semester</Label>
+                  <Select onValueChange={setSemester}>
+                    <SelectTrigger id="semester">
+                      <SelectValue placeholder="Select semester" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1st Semester</SelectItem>
+                      <SelectItem value="2">2nd Semester</SelectItem>
+                      <SelectItem value="3">3rd Semester</SelectItem>
+                      <SelectItem value="4">4th Semester</SelectItem>
+                      <SelectItem value="5">5th Semester</SelectItem>
+                      <SelectItem value="6">6th Semester</SelectItem>
+                      <SelectItem value="7">7th Semester</SelectItem>
+                      <SelectItem value="8">8th Semester</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="email" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <div className="relative">
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type={showPassword ? "text" : "password"} 
-                        />
-                      </FormControl>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute right-0 top-0 h-full"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </Button>
-                    </div>
-                    <FormDescription>
-                      At least 6 characters
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="userType"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>I want to</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="student" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Find a tutor (I'm a student)</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="tutor" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Offer tutoring (I'm a tutor)</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="program"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Program/Degree</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="e.g. Computer Science"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <TabsContent value="student" className="border rounded-md p-4 mt-4">
+                <h3 className="font-medium mb-4">Student Preferences</h3>
                 
-                <FormField
-                  control={form.control}
-                  name="semester"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Semester</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select semester" />
-                          </SelectTrigger>
-                        </FormControl>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="student-subjects">Subjects You Need Help With</Label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {subjects.map((subject, index) => (
+                        <div key={index} className="bg-primary/10 px-3 py-1 rounded-full flex items-center">
+                          <span className="text-primary text-sm">{subject}</span>
+                          <button
+                            type="button"
+                            className="ml-2 text-primary/70 hover:text-primary"
+                            onClick={() => removeSubject(subject)}
+                          >
+                            <i className="fas fa-times"></i>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex">
+                      <Select
+                        onValueChange={(value) => setSubjectInput(value)}
+                        value={subjectInput}
+                      >
+                        <SelectTrigger className="w-full rounded-r-none">
+                          <SelectValue placeholder="Select a subject you need help with" />
+                        </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1st Semester">1st Semester</SelectItem>
-                          <SelectItem value="2nd Semester">2nd Semester</SelectItem>
-                          <SelectItem value="3rd Semester">3rd Semester</SelectItem>
-                          <SelectItem value="4th Semester">4th Semester</SelectItem>
-                          <SelectItem value="5th Semester">5th Semester</SelectItem>
-                          <SelectItem value="6th Semester">6th Semester</SelectItem>
-                          <SelectItem value="7th Semester">7th Semester</SelectItem>
-                          <SelectItem value="8th Semester">8th Semester</SelectItem>
-                          <SelectItem value="PhD Candidate">PhD Candidate</SelectItem>
+                          <SelectItem value="calculas">Calculas</SelectItem>
+                          <SelectItem value="linear algebra">Linear Algebra</SelectItem>
+                          <SelectItem value="data structures">Data Structures</SelectItem>
+                          <SelectItem value="algorithms">Algorithms</SelectItem>
+                          <SelectItem value="database systems">Database Systems</SelectItem>
+                          <SelectItem value="programming">Programming</SelectItem>
+                          <SelectItem value="web development">Web Development</SelectItem>
+                          <SelectItem value="mechanics">Mechanics</SelectItem>
+                          <SelectItem value="electromagnetism">Electromagnetism</SelectItem>
+                          <SelectItem value="thermodynamics">Thermodynamics</SelectItem>
+                          <SelectItem value="organic chemistry">Organic Chemistry</SelectItem>
+                          <SelectItem value="biochemistry">Biochemistry</SelectItem>
+                          <SelectItem value="statistics">Statistics</SelectItem>
+                          <SelectItem value="accounting">Accounting</SelectItem>
+                          <SelectItem value="economics">Economics</SelectItem>
+                          <SelectItem value="finance">Finance</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      <Button 
+                        type="button" 
+                        onClick={addSubject}
+                        className="rounded-l-none"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Add subjects you need help with to find matching tutors
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="student-availability">Availability for Tutoring</Label>
+                    <Input
+                      id="student-availability"
+                      value={availability}
+                      onChange={(e) => setAvailability(e.target.value)}
+                      placeholder="e.g. Mon-Fri, 2PM-8PM; Weekends, 10AM-6PM"
+                      required
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Enter times when you're available for tutoring sessions
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="student-hourly-rate">Hourly Rate (Rs.)</Label>
+                    <Input
+                      id="student-hourly-rate"
+                      type="number"
+                      value={hourlyRate}
+                      onChange={(e) => setHourlyRate(e.target.value)}
+                      placeholder="e.g. 1000"
+                      min="0"
+                      required
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Enter your preferred hourly rate for tutoring sessions
+                    </p>
+                  </div>
+                </div>
+              </TabsContent>
               
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={registerMutation.isPending}
-              >
-                {registerMutation.isPending ? "Creating account..." : "Create Account"}
+
+              
+              <TabsContent value="tutor" className="border rounded-md p-4 mt-4">
+                <h3 className="font-medium mb-4">Tutor Information</h3>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="subjects">Subjects</Label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {subjects.map((subject, index) => (
+                        <div key={index} className="bg-primary/10 px-3 py-1 rounded-full flex items-center">
+                          <span className="text-primary text-sm">{subject}</span>
+                          <button
+                            type="button"
+                            className="ml-2 text-primary/70 hover:text-primary"
+                            onClick={() => removeSubject(subject)}
+                          >
+                            <i className="fas fa-times"></i>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex">
+                      <Select
+                        onValueChange={(value) => setSubjectInput(value)}
+                        value={subjectInput}
+                      >
+                        <SelectTrigger className="w-full rounded-r-none">
+                          <SelectValue placeholder="Select a subject you can teach" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="calculas">Calculas</SelectItem>
+                          <SelectItem value="linear algebra">Linear Algebra</SelectItem>
+                          <SelectItem value="data structures">Data Structures</SelectItem>
+                          <SelectItem value="algorithms">Algorithms</SelectItem>
+                          <SelectItem value="database systems">Database Systems</SelectItem>
+                          <SelectItem value="programming">Programming</SelectItem>
+                          <SelectItem value="web development">Web Development</SelectItem>
+                          <SelectItem value="mechanics">Mechanics</SelectItem>
+                          <SelectItem value="electromagnetism">Electromagnetism</SelectItem>
+                          <SelectItem value="thermodynamics">Thermodynamics</SelectItem>
+                          <SelectItem value="organic chemistry">Organic Chemistry</SelectItem>
+                          <SelectItem value="biochemistry">Biochemistry</SelectItem>
+                          <SelectItem value="statistics">Statistics</SelectItem>
+                          <SelectItem value="accounting">Accounting</SelectItem>
+                          <SelectItem value="economics">Economics</SelectItem>
+                          <SelectItem value="finance">Finance</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button 
+                        type="button" 
+                        onClick={addSubject}
+                        className="rounded-l-none"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="hourlyRate">Hourly Rate (Rs.)</Label>
+                      <Input
+                        id="hourlyRate"
+                        type="number"
+                        value={hourlyRate}
+                        onChange={(e) => setHourlyRate(e.target.value)}
+                        placeholder="e.g. 800"
+                        min="0"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="experience">Experience</Label>
+                      <Input
+                        id="experience"
+                        value={experience}
+                        onChange={(e) => setExperience(e.target.value)}
+                        placeholder="e.g. 2 years"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="availability">Availability</Label>
+                      <Input
+                        id="availability"
+                        value={availability}
+                        onChange={(e) => setAvailability(e.target.value)}
+                        placeholder="e.g. Mon-Fri, 2PM-8PM"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></span>
+                    Creating account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
               </Button>
             </form>
-          </Form>
-          
-          <Separator className="my-4" />
-          
-          <div className="text-center text-sm">
-            <p className="text-muted-foreground">
-              Already have an account?{" "}
-              <Link href="/login" className="text-primary hover:text-primary/80">
-                Sign in
-              </Link>
-            </p>
-          </div>
+          </Tabs>
         </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-sm text-center text-gray-500 dark:text-gray-400">
+            Already have an account?{" "}
+            <Link href="/auth/login" className="text-primary hover:underline">
+              Log in
+            </Link>
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );

@@ -1,435 +1,149 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import { format } from "date-fns";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { MainLayout } from "@/components/layout/main-layout";
+import { StatsCard } from "@/components/dashboard/stats-card";
+import { UpcomingSessions } from "@/components/dashboard/upcoming-sessions";
+import { RecentMessages } from "@/components/dashboard/recent-messages";
+import { TutorCard } from "@/components/dashboard/tutor-card";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2, BookOpen, UserCheck, Star, MessageSquare, Video, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, DollarSign, MessageSquare, Star } from "lucide-react";
-import { Booking, User } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import ReviewForm from "@/components/ReviewForm";
-import { BOOKING_STATUSES, PAYMENT_STATUSES } from "@/lib/constants";
+import { ChatModal } from "@/components/chat/chat-modal";
 
-const Dashboard = () => {
-  const [, navigate] = useLocation();
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const { toast } = useToast();
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
+export default function Dashboard() {
+  const { user } = useAuth();
+  const [activeChat, setActiveChat] = useState<{ id: number; fullName: string; profileImage?: string } | null>(null);
   
-  const { data: studentBookings = [], isLoading: isStudentBookingsLoading } = useQuery<Booking[]>({
-    queryKey: ["/api/bookings/student"],
-    enabled: isAuthenticated && user?.userType === "student",
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['/api/dashboard'],
   });
-  
-  const { data: tutorBookings = [], isLoading: isTutorBookingsLoading } = useQuery<Booking[]>({
-    queryKey: ["/api/bookings/tutor"],
-    enabled: isAuthenticated && user?.userType === "tutor",
-  });
-  
-  const updateBookingStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) => 
-      apiRequest("PUT", `/api/bookings/${id}/status`, { status }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bookings/student"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bookings/tutor"] });
-      toast({
-        title: "Status updated",
-        description: "The booking status has been updated successfully.",
-      });
-      setIsCancelDialogOpen(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error updating status",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
+
+  const handleMessageClick = (userId: number) => {
+    // Find the user data from either upcoming sessions or conversations
+    const userFromSessions = data?.upcomingSessions?.find(session => 
+      session.tutor.id === userId || session.student.id === userId
+    );
+    
+    const userFromConversations = data?.conversations?.find(conv => 
+      conv.user.id === userId
+    )?.user;
+    
+    const chatUser = userFromSessions 
+      ? (user?.role === 'student' ? userFromSessions.tutor : userFromSessions.student)
+      : userFromConversations;
+    
+    if (chatUser) {
+      setActiveChat(chatUser);
     }
-  });
-  
-  useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!isLoading && !isAuthenticated) {
-      navigate("/login");
-    }
-  }, [isAuthenticated, isLoading, navigate]);
-  
-  if (isLoading || isStudentBookingsLoading || isTutorBookingsLoading) {
+  };
+
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
-        <p>Loading dashboard...</p>
-      </div>
+      <MainLayout>
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
     );
   }
-  
-  if (!isAuthenticated || !user) {
-    return null; // Will redirect to login
-  }
-  
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case BOOKING_STATUSES.PENDING:
-        return "outline";
-      case BOOKING_STATUSES.CONFIRMED:
-        return "secondary";
-      case BOOKING_STATUSES.COMPLETED:
-        return "default";
-      case BOOKING_STATUSES.CANCELLED:
-        return "destructive";
-      default:
-        return "outline";
-    }
-  };
-  
-  const getPaymentStatusBadgeVariant = (status: string) => {
-    return status === PAYMENT_STATUSES.PAID ? "default" : "destructive";
-  };
-  
-  const handleCancelBooking = () => {
-    if (!selectedBooking) return;
-    
-    updateBookingStatusMutation.mutate({
-      id: selectedBooking.id,
-      status: BOOKING_STATUSES.CANCELLED,
-    });
-  };
-  
-  const handleConfirmBooking = (booking: Booking) => {
-    updateBookingStatusMutation.mutate({
-      id: booking.id,
-      status: BOOKING_STATUSES.CONFIRMED,
-    });
-  };
-  
-  const handleCompleteBooking = (booking: Booking) => {
-    updateBookingStatusMutation.mutate({
-      id: booking.id,
-      status: BOOKING_STATUSES.COMPLETED,
-    });
-  };
-  
-  const pendingBookings = user.userType === "student" 
-    ? studentBookings.filter(b => b.status === BOOKING_STATUSES.PENDING)
-    : tutorBookings.filter(b => b.status === BOOKING_STATUSES.PENDING);
-  
-  const upcomingBookings = user.userType === "student"
-    ? studentBookings.filter(b => b.status === BOOKING_STATUSES.CONFIRMED)
-    : tutorBookings.filter(b => b.status === BOOKING_STATUSES.CONFIRMED);
-  
-  const completedBookings = user.userType === "student"
-    ? studentBookings.filter(b => b.status === BOOKING_STATUSES.COMPLETED)
-    : tutorBookings.filter(b => b.status === BOOKING_STATUSES.COMPLETED);
-  
-  const cancelledBookings = user.userType === "student"
-    ? studentBookings.filter(b => b.status === BOOKING_STATUSES.CANCELLED)
-    : tutorBookings.filter(b => b.status === BOOKING_STATUSES.CANCELLED);
-  
-  const renderBookingCard = (booking: Booking, actions: boolean = true) => (
-    <Card key={booking.id} className="mb-4">
-      <CardContent className="pt-6">
-        <div className="flex justify-between flex-wrap gap-4 mb-4">
-          <div>
-            <h3 className="text-lg font-bold">{booking.subject}</h3>
-            <p className="text-gray-500 text-sm">
-              Booking ID: {booking.id}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant={getStatusBadgeVariant(booking.status)}>
-              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-            </Badge>
-            <Badge variant={getPaymentStatusBadgeVariant(booking.paymentStatus)}>
-              {booking.paymentStatus === PAYMENT_STATUSES.PAID ? "Paid" : "Unpaid"}
-            </Badge>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center">
-            <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-            <span>{format(new Date(booking.date), "EEEE, MMMM d, yyyy")}</span>
-          </div>
-          <div className="flex items-center">
-            <Clock className="h-4 w-4 mr-2 text-gray-500" />
-            <span>{booking.startTime} - {booking.endTime}</span>
-          </div>
-          <div className="flex items-center">
-            <User className="h-4 w-4 mr-2 text-gray-500" />
-            <span>{user.userType === "student" ? `Tutor #${booking.tutorId}` : `Student #${booking.studentId}`}</span>
-          </div>
-          <div className="flex items-center">
-            <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
-            <span>${booking.totalAmount.toFixed(2)}</span>
-          </div>
-        </div>
-        
-        {actions && (
-          <div className="flex flex-wrap gap-2 justify-end">
-            {user.userType === "student" && booking.status === BOOKING_STATUSES.PENDING && (
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={() => {
-                  setSelectedBooking(booking);
-                  setIsCancelDialogOpen(true);
-                }}
-              >
-                Cancel
-              </Button>
-            )}
-            
-            {user.userType === "tutor" && booking.status === BOOKING_STATUSES.PENDING && (
-              <>
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => {
-                    setSelectedBooking(booking);
-                    setIsCancelDialogOpen(true);
-                  }}
-                >
-                  Decline
-                </Button>
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  onClick={() => handleConfirmBooking(booking)}
-                >
-                  Confirm
-                </Button>
-              </>
-            )}
-            
-            {user.userType === "tutor" && booking.status === BOOKING_STATUSES.CONFIRMED && (
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={() => handleCompleteBooking(booking)}
-              >
-                Mark as Completed
-              </Button>
-            )}
-            
-            {user.userType === "student" && booking.status === BOOKING_STATUSES.COMPLETED && (
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={() => {
-                  setSelectedBooking(booking);
-                  setIsReviewDialogOpen(true);
-                }}
-              >
-                Leave Review
-              </Button>
-            )}
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate(`/messages/${user.userType === "student" ? booking.tutorId : booking.studentId}`)}
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Message
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden p-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Dashboard</h1>
+            <p className="text-red-500">{error.message}</p>
+            <Button onClick={() => window.location.reload()} className="mt-4">
+              Try Again
             </Button>
           </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-  
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-wrap justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold font-inter">Dashboard</h1>
-        {user.userType === "student" && (
-          <Button className="btn-primary" asChild>
-            <a href="/tutors">Find a Tutor</a>
-          </Button>
-        )}
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Pending</CardTitle>
-            <CardDescription className="text-2xl font-bold">
-              {pendingBookings.length}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Upcoming</CardTitle>
-            <CardDescription className="text-2xl font-bold">
-              {upcomingBookings.length}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Completed</CardTitle>
-            <CardDescription className="text-2xl font-bold">
-              {completedBookings.length}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Cancelled</CardTitle>
-            <CardDescription className="text-2xl font-bold">
-              {cancelledBookings.length}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-      
-      <Tabs defaultValue="pending">
-        <TabsList className="mb-4">
-          <TabsTrigger value="pending">Pending</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-          <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="pending">
-          {pendingBookings.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-gray-500">No pending bookings</p>
-              </CardContent>
-            </Card>
-          ) : (
-            pendingBookings.map(booking => renderBookingCard(booking))
-          )}
-        </TabsContent>
-        
-        <TabsContent value="upcoming">
-          {upcomingBookings.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-gray-500">No upcoming bookings</p>
-              </CardContent>
-            </Card>
-          ) : (
-            upcomingBookings.map(booking => renderBookingCard(booking))
-          )}
-        </TabsContent>
-        
-        <TabsContent value="completed">
-          {completedBookings.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-gray-500">No completed bookings</p>
-              </CardContent>
-            </Card>
-          ) : (
-            completedBookings.map(booking => renderBookingCard(booking))
-          )}
-        </TabsContent>
-        
-        <TabsContent value="cancelled">
-          {cancelledBookings.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-gray-500">No cancelled bookings</p>
-              </CardContent>
-            </Card>
-          ) : (
-            cancelledBookings.map(booking => renderBookingCard(booking, false))
-          )}
-        </TabsContent>
-      </Tabs>
-      
-      {/* Review Dialog */}
-      <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Leave a Review</DialogTitle>
-            <DialogDescription>
-              Share your experience with this tutor to help other students
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedBooking && (
-            <ReviewForm 
-              tutorId={selectedBooking.tutorId} 
-              bookingId={selectedBooking.id}
-              onReviewSubmitted={() => setIsReviewDialogOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-      
-      {/* Cancel Dialog */}
-      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {user.userType === "student" ? "Cancel Booking" : "Decline Booking"}
-            </DialogTitle>
-            <DialogDescription>
-              {user.userType === "student" 
-                ? "Are you sure you want to cancel this booking? This action cannot be undone."
-                : "Are you sure you want to decline this booking request? This action cannot be undone."
-              }
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="reason" className="text-sm font-medium">
-                Reason (optional)
-              </label>
-              <Textarea
-                id="reason"
-                placeholder="Please provide a reason for cancellation"
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
+    <MainLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+        {/* Welcome Section */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
+          <div className="p-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Welcome back, {user?.fullName?.split(' ')[0] || 'there'}!
+            </h1>
+            <p className="text-gray-600">Ready to continue your learning journey?</p>
+            
+            <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-3">
+              <StatsCard 
+                title="Active Sessions" 
+                value={data?.stats?.activeSessions || 0}
+                icon={<BookOpen className="text-white" />}
+                className="bg-primary-50"
+                iconClassName="bg-primary"
+              />
+              
+              <StatsCard 
+                title="Completed Sessions" 
+                value={data?.stats?.completedSessions || 0}
+                icon={<UserCheck className="text-white" />}
+                className="bg-green-50"
+                iconClassName="bg-green-500"
+              />
+              
+              <StatsCard 
+                title="Average Rating" 
+                value={`${data?.stats?.avgRating?.toFixed(1) || '0.0'}/5`}
+                icon={<Star className="text-white" />}
+                className="bg-amber-50"
+                iconClassName="bg-amber-500"
               />
             </div>
           </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsCancelDialogOpen(false)}
-            >
-              Keep Booking
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleCancelBooking}
-              disabled={updateBookingStatusMutation.isPending}
-            >
-              {updateBookingStatusMutation.isPending
-                ? "Processing..."
-                : user.userType === "student" ? "Cancel Booking" : "Decline Booking"
-              }
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
+        </div>
 
-export default Dashboard;
+        {/* Dashboard Sections */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          {/* Upcoming Sessions */}
+          <UpcomingSessions 
+            sessions={data?.upcomingSessions || []} 
+            onMessageClick={handleMessageClick} 
+          />
+          
+          {/* Recent Messages */}
+          <RecentMessages 
+            conversations={data?.conversations || []}
+            onConversationOpen={handleMessageClick}
+          />
+        </div>
+        
+        {/* Recommended Tutors */}
+        {user?.role === 'student' && data?.recommendedTutors?.length > 0 && (
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-medium text-gray-900">Recommended Tutors</h2>
+              <a href="/find-tutors" className="text-primary hover:text-primary-600 text-sm flex items-center">
+                View All <ArrowRight className="ml-1 h-4 w-4" />
+              </a>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {data.recommendedTutors.map((tutor) => (
+                <TutorCard key={tutor.id} tutor={tutor} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Chat Modal */}
+      {activeChat && (
+        <ChatModal
+          user={activeChat}
+          isOpen={!!activeChat}
+          onClose={() => setActiveChat(null)}
+        />
+      )}
+    </MainLayout>
+  );
+}

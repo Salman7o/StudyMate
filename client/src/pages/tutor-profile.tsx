@@ -348,7 +348,7 @@ export default function TutorProfile() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => setShowChatModal(true)}
+                        onClick={() => setLocation(`/messages?user=${tutorId}`)}
                       >
                         <MessageSquare className="mr-2 h-4 w-4" />
                         Message
@@ -373,7 +373,7 @@ export default function TutorProfile() {
                     <div>
                       <h3 className="font-medium">Subjects</h3>
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {tutor.tutorProfile.subjects.map((subject, index) => (
+                        {tutor.tutorProfile.subjects.map((subject: string, index: number) => (
                           <Badge key={index} variant="secondary">
                             {subject}
                           </Badge>
@@ -405,7 +405,7 @@ export default function TutorProfile() {
                       <Clock className="h-5 w-5 text-gray-500 mt-0.5" />
                       <div>
                         <h3 className="font-medium">Availability</h3>
-                        <p className="text-gray-700">{tutor.tutorProfile.availability.join(', ')}</p>
+                        <p className="text-gray-700">{(tutor.tutorProfile.availability as string[]).join(', ')}</p>
                       </div>
                     </div>
                   )}
@@ -452,7 +452,7 @@ export default function TutorProfile() {
                   <CardContent>
                     {tutor.reviews && tutor.reviews.length > 0 ? (
                       <div className="space-y-6">
-                        {tutor.reviews.map((review) => (
+                        {tutor.reviews.map((review: any) => (
                           <div key={review.id} className="pb-6 border-b last:border-0">
                             <div className="flex items-center mb-2">
                               <div className="flex">
@@ -520,7 +520,7 @@ export default function TutorProfile() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {tutor.tutorProfile.subjects.map((subject) => (
+                        {tutor.tutorProfile.subjects.map((subject: string) => (
                           <SelectItem key={subject} value={subject}>
                             {subject}
                           </SelectItem>

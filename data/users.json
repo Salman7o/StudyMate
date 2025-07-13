@@ -1,0 +1,54 @@
+[
+  {
+    "username": "Salman",
+    "password": "$2b$10$MhUtwMukSg2pydk2xZ11HOHpTmzSqd.axitjItfhY0Z74ro3j8AlC",
+    "email": "salmanhamza2580@gmail.com",
+    "fullName": "salman hamzo",
+    "role": "student",
+    "program": "Computer Science",
+    "semester": "6",
+    "university": "szabist University",
+    "subjects": [
+      "calculas"
+    ],
+    "availability": "Tuesday 3-5pm",
+    "hourlyRate": 1000,
+    "id": 1,
+    "joinedAt": "2025-07-13T00:44:43.699Z"
+  },
+  {
+    "username": "saad",
+    "password": "$2b$10$XAcezLwBek4XSEZrTUddXuD2kEFPASyvHjXShCu/Z26TOVaBKQ2.i",
+    "email": "salman.memon1203@gmail.com",
+    "fullName": "saad naeem",
+    "role": "tutor",
+    "program": "Computer Science",
+    "semester": "6",
+    "university": "szabist University",
+    "subjects": [
+      "calculas",
+      "linear algebra"
+    ],
+    "availability": "Tuesday 3-5pm",
+    "hourlyRate": 1000,
+    "id": 2,
+    "joinedAt": "2025-07-13T00:45:35.919Z"
+  },
+  {
+    "username": "Afnan",
+    "password": "$2b$10$FMoHQFaNs0dy7gME32Idne.4kHZmx8ohCqTobWJtZpV21z.R967e.",
+    "email": "salman.@gmail.com",
+    "fullName": "Afnan mirza",
+    "role": "student",
+    "program": "Computer Science",
+    "semester": "6",
+    "university": "Szabist University",
+    "subjects": [
+      "calculas"
+    ],
+    "availability": "Tuesday 3-5 pm",
+    "hourlyRate": 1000,
+    "id": 3,
+    "joinedAt": "2025-07-13T01:16:37.655Z"
+  }
+]

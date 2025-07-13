@@ -1,0 +1,16 @@
+[
+  {
+    "userId": 2,
+    "subjects": [
+      "calculas",
+      "linear algebra"
+    ],
+    "hourlyRate": 1000,
+    "experience": "New tutor on the platform",
+    "availability": "Tuesday 3-5pm",
+    "isAvailableNow": true,
+    "rating": 0,
+    "reviewCount": 0,
+    "id": 1
+  }
+]

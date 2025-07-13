@@ -127,14 +127,7 @@ export default function SimpleTutorProfile() {
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => {
-                    try {
-                      setShowChatModal(true);
-                    } catch (error) {
-                      console.error("Authentication required for messaging");
-                      setLocation("/auth/login?redirect=/tutor-profile/" + id);
-                    }
-                  }}
+                  onClick={() => setLocation(`/messages?user=${id}`)}
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Message
