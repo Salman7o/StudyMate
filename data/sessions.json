@@ -43,5 +43,20 @@
     "id": 3,
     "createdAt": "2025-07-13T01:13:39.906Z",
     "updatedAt": "2025-07-13T01:13:56.496Z"
+  },
+  {
+    "studentId": 3,
+    "tutorId": 2,
+    "subject": "Calculus",
+    "sessionType": "One-on-One Tutoring",
+    "date": "2025-07-17T09:00:00.000Z",
+    "startTime": "14:00",
+    "duration": 60,
+    "totalAmount": 1000,
+    "status": "cancelled",
+    "description": "",
+    "id": 4,
+    "createdAt": "2025-07-17T18:21:16.248Z",
+    "updatedAt": "2025-07-17T18:21:24.371Z"
   }
 ]
